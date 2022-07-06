@@ -181,7 +181,7 @@ def QA_fetch_financial_report(code, start_date, end_date, type ='report', ltype=
                 cndict['report_date']='report_date'
                 cndict['crawl_date']='crawl_date'
                 res_pd.columns = res_pd.columns.map(lambda x: cndict[x])
-            elif ltype is 'EN':
+            elif ltype == 'EN':
                 endict=dict(zip(num_columns,EN_columns))
                 endict['283']='283'
                 try:
@@ -571,7 +571,7 @@ def QA_fetch_financial_report_wy(code, start_date = None, end_date = None, type 
                 cndict['report_date']='report_date'
                 cndict['crawl_date']='crawl_date'
                 res_pd.columns = res_pd.columns.map(lambda x: cndict[x])
-            elif ltype is 'EN':
+            elif ltype == 'EN':
                 endict=dict(zip(num_columns,EN_columns))
                 endict['283']='283'
                 try:
@@ -1975,7 +1975,7 @@ def QA_fetch_stock_half(
         elif format in ['list', 'l', 'L']:
             return numpy.asarray(res).tolist()
         else:
-            QA_util_log_info(
+            print(
                 "QA Error QA_fetch_stock_half format parameter %s is none of  \"P, p, pandas, pd , json, dict , n, N, numpy, list, l, L, !\" "
                 % format
             )
@@ -2062,7 +2062,7 @@ def QA_fetch_stock_week(
         elif format in ['list', 'l', 'L']:
             return numpy.asarray(res).tolist()
         else:
-            QA_util_log_info(
+            print(
                 "QA Error QA_fetch_stock_week format parameter %s is none of  \"P, p, pandas, pd , json, dict , n, N, numpy, list, l, L, !\" "
                 % format
             )
@@ -2149,7 +2149,7 @@ def QA_fetch_stock_month(
         elif format in ['list', 'l', 'L']:
             return numpy.asarray(res).tolist()
         else:
-            QA_util_log_info(
+            print(
                 "QA Error QA_fetch_stock_month format parameter %s is none of  \"P, p, pandas, pd , json, dict , n, N, numpy, list, l, L, !\" "
                 % format
             )
@@ -2236,7 +2236,7 @@ def QA_fetch_stock_year(
         elif format in ['list', 'l', 'L']:
             return numpy.asarray(res).tolist()
         else:
-            QA_util_log_info(
+            print(
                 "QA Error QA_fetch_stock_year format parameter %s is none of  \"P, p, pandas, pd , json, dict , n, N, numpy, list, l, L, !\" "
                 % format
             )
@@ -2323,7 +2323,7 @@ def QA_fetch_index_week(
         elif format in ['list', 'l', 'L']:
             return numpy.asarray(res).tolist()
         else:
-            QA_util_log_info(
+            print(
                 "QA Error QA_fetch_index_week format parameter %s is none of  \"P, p, pandas, pd , json, dict , n, N, numpy, list, l, L, !\" "
                 % format
             )
@@ -2410,7 +2410,7 @@ def QA_fetch_index_month(
         elif format in ['list', 'l', 'L']:
             return numpy.asarray(res).tolist()
         else:
-            QA_util_log_info(
+            print(
                 "QA Error QA_fetch_index_month format parameter %s is none of  \"P, p, pandas, pd , json, dict , n, N, numpy, list, l, L, !\" "
                 % format
             )
@@ -2497,7 +2497,7 @@ def QA_fetch_index_year(
         elif format in ['list', 'l', 'L']:
             return numpy.asarray(res).tolist()
         else:
-            QA_util_log_info(
+            print(
                 "QA Error QA_fetch_index_year format parameter %s is none of  \"P, p, pandas, pd , json, dict , n, N, numpy, list, l, L, !\" "
                 % format
             )
@@ -3093,9 +3093,11 @@ def QA_fetch_stock_quant_hour(code, start, end=None, block = True, norm_type='no
         QA_util_log_info(
             'JOB Get Stock Tech Hour data start=%s end=%s' % (start, end))
         hour_res = hour(start, end, code, type = 'hour').groupby('code').fillna(method='ffill').drop(['date'],axis=1)
+        print(hour_res.shape)
         QA_util_log_info(
             'JOB Get Stock Tech 30Min data start=%s end=%s' % (start, end))
         hhour_res = hhour(start, end, code, type = None).groupby('code').fillna(method='ffill')
+        print(hhour_res.shape)
 
         try:
             res = hhour_res.join(hour_res)

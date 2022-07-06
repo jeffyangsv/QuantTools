@@ -65,7 +65,19 @@ NAME = "QUANTTOOLS"
 """
 
 """
-PACKAGES = ["QUANTTOOLS", "QUANTTOOLS.QAStockETL", "QUANTTOOLS.QAIndexTradingDay", "QUANTTOOLS.QAStockTradingDay"]
+PACKAGES = ["QUANTTOOLS", "QUANTTOOLS.QAStockETL", "QUANTTOOLS.Ananlysis", "QUANTTOOLS.Market", "QUANTTOOLS.Message", "QUANTTOOLS.Model", "QUANTTOOLS.Trader",
+           "QUANTTOOLS.Ananlysis.Tools", "QUANTTOOLS.Ananlysis.Trends",
+           "QUANTTOOLS.Market.MarketReport", "QUANTTOOLS.Market.MarketTools", "QUANTTOOLS.Market.QAIndexTradingDay", "QUANTTOOLS.Market.QAStockTradingDay", "QUANTTOOLS.Market.StockMarket",
+	   "QUANTTOOLS.Market.MarketReport.JOB", "QUANTTOOLS.Market.MarketTools.DataTools", "QUANTTOOLS.Market.MarketTools.PredictTools", "QUANTTOOLS.Market.MarketTools.StrategyTools", 
+	   "QUANTTOOLS.Market.MarketTools.TimeTools", "QUANTTOOLS.Market.MarketTools.TrackTools","QUANTTOOLS.Market.MarketTools.TradingTools","QUANTTOOLS.Market.MarketTools.TrainTools",
+	   "QUANTTOOLS.Market.QAIndexTradingDay.IndexStrategyFirst", "QUANTTOOLS.Market.StockMarket.DailyJob", "QUANTTOOLS.Market.StockMarket.StockStrategyFirst", "QUANTTOOLS.Market.StockMarket.StockStrategyForth", 
+	   "QUANTTOOLS.Market.StockMarket.StockStrategyReal", "QUANTTOOLS.Market.StockMarket.StockStrategySecond", "QUANTTOOLS.Market.StockMarket.StockStrategyThird", "QUANTTOOLS.Market.StockMarket.Summary",
+           "QUANTTOOLS.Message.message_func",
+           "QUANTTOOLS.Model.FactorTools", "QUANTTOOLS.Model.IndexModel", "QUANTTOOLS.Model.QABaseModel", "QUANTTOOLS.Model.StockModel",
+           "QUANTTOOLS.QAStockETL.Check", "QUANTTOOLS.QAStockETL.Crawly", "QUANTTOOLS.QAStockETL.FuncTools", "QUANTTOOLS.QAStockETL.QAData", "QUANTTOOLS.QAStockETL.QAFetch",
+	   "QUANTTOOLS.QAStockETL.QASU", "QUANTTOOLS.QAStockETL.QAUtil",
+	   "QUANTTOOLS.Trader.account_manage", "QUANTTOOLS.Trader.account_manage.base_func", "QUANTTOOLS.Trader.account_manage.Setting", "QUANTTOOLS.Trader.account_manage.TrackAction",
+           "QUANTTOOLS.Trader.account_manage.TradAction", "QUANTTOOLS.Trader.account_manage.Trend_Track"]
 """
 
 """

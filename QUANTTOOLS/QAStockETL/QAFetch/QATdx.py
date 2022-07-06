@@ -150,15 +150,15 @@ def QA_fetch_get_index_info(file_name=['tdxzs.cfg','tdxzs2.cfg','tdxzs3.cfg']):
                            encoding='gb18030'))
 
 def QA_fetch_get_stock_delist():
-    sh = ak.stock_info_sh_delist(indicator="终止上市公司")[['COMPANY_CODE','SECURITY_ABBR_A','LISTING_DATE','QIANYI_DATE']]
-    sz = ak.stock_info_sz_delist(indicator="终止上市公司")
+    sh = ak.stock_info_sh_delist()[["公司代码","公司简称","上市日期","暂停上市日期"]]
+    sz = ak.stock_info_sz_delist(indicator="终止上市公司")[["证券代码","证券简称","上市日期","终止上市日期"]]
     sz.columns = ['code','name','LISTING_DATE','QIANYI_DATE']
     sh.columns = ['code','name','LISTING_DATE','QIANYI_DATE']
     sh = sh.assign(sse = 'sh')
     sz = sz.assign(sse = 'sz')
     sz = sz.append(sh)
     sz = sz.assign(QIANYI_DATE = sz.QIANYI_DATE.apply(lambda x:str(x)[0:10]))
-    return(sz)
+    return(sz.reset_index(drop = True))
 
 def QA_fetch_get_stock_half_realtime(code, date = QA_util_today_str(), source = 'sina'):
     try:

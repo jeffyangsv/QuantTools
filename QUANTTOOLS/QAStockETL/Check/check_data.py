@@ -20,6 +20,10 @@ from QUANTTOOLS.QAStockETL.QAUtil.QASQLStockAlpha191Half import QA_Sql_Stock_Alp
 from QUANTTOOLS.QAStockETL.QAUtil.QASQLStockAlpha101Half import QA_Sql_Stock_Alpha101Half
 from QUANTTOOLS.QAStockETL.QAFetch import QA_fetch_get_stock_half_realtime,QA_fetch_stock_alpha_real,QA_fetch_stock_alpha101_real
 from QUANTTOOLS.QAStockETL.Check.check_base import check_stock_data, check_index_data, check_stock_base
+from  QUANTAXIS.QAUtil import (QA_util_get_real_date,
+                               QA_util_get_last_day,
+                               QA_util_if_trade
+                               )
 
 def QA_fetch_stock_half_realtime(code, start, end):
     return(QA_fetch_get_stock_half_realtime(code, start))
@@ -71,6 +75,15 @@ def check_sinastock_half(mark_day = None):
 
 
 def QA_fetch_stock_day(code, start, end):
+    mark_day = start
+    if QA_util_if_trade(mark_day):
+        if QA_util_get_last_day(mark_day) == 'wrong date':
+            start = QA_util_get_real_date(mark_day)
+        else:
+            start = QA_util_get_last_day(mark_day)
+    else:
+        mark_day = QA_util_get_real_date(mark_day)
+        start = QA_util_get_last_day(mark_day)
     return(QA_fetch_stock_day_adv(code, start, end).data)
 
 def check_stock_day(mark_day = None):

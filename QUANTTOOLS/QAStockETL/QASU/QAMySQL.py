@@ -192,10 +192,18 @@ def QA_etl_stock_financial(type = "crawl", start_date = str(datetime.date.today(
     QA_util_log_info(
         '##JOB Now ETL STOCK FINANCIAL REPORT ==== {}'.format(start_date), ui_log)
     codes = list(QA_fetch_stock_all()['code'])
-    if type == 'all':
-        data = QA_fetch_financial_report_adv(codes).data
-        columns = [i for i in list(data.columns) if i.startswith('unknown') == False and i.isdigit() == False and i.startswith('IS_R') == False]
-        QA_util_sql_store_mysql(data[columns].reset_index(drop=True).fillna(0), "stock_financial",if_exists='replace')
+    if type == 'all' and len(codes) > 0:
+        for code in codes:
+            QA_util_log_info('The {} of Total {}====={}'.format
+                             ((codes.index(code) + 1), len(codes), code))
+            data = QA_fetch_financial_report_adv(code).data
+            if data is None:
+                QA_util_log_info("We have no FINANCIAL data for the code {}".format(code))
+            else:
+                columns = [i for i in list(data.columns) if i.startswith('unknown') == False and i.isdigit() == False and i.startswith('IS_R') == False]
+                QA_util_sql_store_mysql(data[columns].reset_index(drop=True).fillna(0), "stock_financial",if_exists='replace')
+                QA_util_log_info(
+                    '##JOB ETL STOCK FINANCIAL HAS BEEN SAVED ==== {}'.format(code), ui_log)
     elif type == "crawl":
         data = QA_fetch_financial_report_adv(codes,start_date,type = 'crawl').data
         if data is None:

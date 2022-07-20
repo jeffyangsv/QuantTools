@@ -85,7 +85,7 @@ if __name__ == '__main__':
         print("write data into sqldatabase")
         QA_etl_stock_list()
         QA_etl_stock_info()
-        QA_etl_stock_xdxr(type == "all")
+        QA_etl_stock_xdxr(type = "all")
         QA_etl_stock_day('day',mark_day)
         QA_etl_stock_block()
         print("done")

@@ -104,8 +104,11 @@ def QA_fetch_get_stock_industry(stock_all):
     index_info = QA_fetch_get_index_info()
     stock_info = QA_fetch_stock_info(stock_all.code.tolist())[['code','province','ipo_date']]
 
-    name_dict = index_info[['code','index_name']].set_index('code').T.to_dict('records')[0]
-    hy_dict = index_info[['HY','index_name']].set_index('HY').T.to_dict('records')[0]
+    # name_dict = index_info[['code','index_name']].set_index('code').T.to_dict('records')[0]
+    # hy_dict = index_info[['HY','index_name']].set_index('HY').T.to_dict('records')[0]
+    name_dict = index_info[['code', 'index_name']].set_index('code').groupby('code')['index_name'].apply(
+        lambda x: x).to_dict()
+    hy_dict = index_info[['HY', 'index_name']].set_index('HY').groupby('HY')['index_name'].apply(lambda x: x).to_dict()
     name_dict['880200'] = 'unknown'
     name_dict['0'] = 'unknown'
     hy_dict['T00'] = 'unknown'

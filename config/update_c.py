@@ -27,9 +27,9 @@
 
 """对应于save x
 """
-from QUANTAXIS.QASU.main import (QA_SU_save_stock_block,QA_SU_save_stock_list,QA_SU_save_stock_info_tushare)
+from QUANTAXIS.QASU.main import (QA_SU_save_stock_block,QA_SU_save_stock_list)
 from QUANTAXIS.QASU.save_tdx import QA_SU_save_single_stock_day
-from QUANTTOOLS.QAStockETL import (QA_etl_stock_list, QA_etl_stock_info, QA_etl_stock_xdxr, QA_etl_stock_day, QA_etl_stock_financial,
+from QUANTTOOLS.QAStockETL import (QA_etl_stock_list,QA_SU_save_stock_info_tushare, QA_etl_stock_info, QA_etl_stock_xdxr, QA_etl_stock_day, QA_etl_stock_financial,
                                    QA_etl_stock_block, QA_etl_process_financial_day,QA_etl_stock_financial_wy,
                                    QA_SU_save_stock_xdxr, QA_SU_save_stock_info,QA_SU_save_stock_financial_wy_day,
                                    QA_SU_save_stock_fianacial_percent_day, QA_util_process_stock_financial,
@@ -55,7 +55,7 @@ if __name__ == '__main__':
         except:
             pass
         QA_SU_save_stock_list('tdx')
-        #QA_SU_save_stock_info_tushare()
+        QA_SU_save_stock_info_tushare()
         QA_SU_save_stock_industryinfo()
         print("download day data")
 

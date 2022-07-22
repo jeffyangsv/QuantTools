@@ -27,7 +27,9 @@ def QA_SU_save_financial_report_day( code = None, client=DATABASE, ui_log = None
             err.append(str(code))
     if code is None:
         code =  QA_fetch_financial_code_new()
-        code =  list(set(QA_fetch_financial_code_wy()['code'])) + code
+        code_wy = QA_fetch_financial_code_wy()['code']
+        if code_wy is not None:
+            code =  list(set(code_wy)) + code
     else:
         code = QA_util_code_tolist(code)
     if code is not None:

@@ -38,9 +38,9 @@ from QUANTTOOLS.QAStockETL import (QA_SU_save_interest_rate,QA_etl_stock_calenda
 if __name__ == '__main__':
     print("write divyield data into sqldatabase")
     QA_SU_save_usstock_list_day()
-    QA_SU_save_interest_rate()
+    #QA_SU_save_interest_rate() #tushare 已不能从sina获取该数据。baostock的query_deposit_rate_data接口，也只能获取到15年前的数据
     QA_SU_save_stock_divyield_day()
-    QA_etl_stock_divyield()
+    QA_etl_stock_divyield("all")
     print("done")
     print("write calendar data into sqldatabase")
     QA_SU_save_report_calendar_day()

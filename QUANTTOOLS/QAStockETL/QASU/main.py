@@ -45,7 +45,8 @@ from QUANTTOOLS.QAStockETL.QASU import \
     save_usstock_finper as usstock_finper, \
     crawl_xq_block as xq_block, \
     save_stock_neutral as neutral, \
-    save_stock_vwap as vwap
+    save_stock_vwap as vwap, \
+    save_tushare_ext as ste
 
 from QUANTAXIS.QAUtil import QA_util_today_str
 
@@ -403,6 +404,8 @@ def QA_SU_save_stock_vwap_day(start_date=None,end_date=None):
 def QA_SU_save_stock_vwap_his(code = None, start_date=None, end_date=None):
     vwap.QA_SU_save_stock_vwap_his(codes=code, start_date=start_date, end_date=end_date)
 
+def QA_SU_save_stock_info_tushare():
+    ste.QA_SU_save_stock_info_tushare()
 
 if __name__ == '__main__':
     pass

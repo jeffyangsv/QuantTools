@@ -99,7 +99,7 @@ def QA_util_sql_store_mysql(data, table_name, ORACLE_PATH=ORACLE_PATH1, if_exist
         '-', '_').replace('/', '_').replace(';', '')
     data.columns = columns.split(",")
     columns = ",".join(data.columns)
-    dtyp = {c:types.VARCHAR(126)
+    dtyp = {c:types.VARCHAR(256)
             for c in data.columns[data.dtypes == 'object'].tolist()}
     try:
         data[:0].to_sql(table_name, engine,
@@ -118,7 +118,7 @@ def QA_util_sql_store_mysql(data, table_name, ORACLE_PATH=ORACLE_PATH1, if_exist
     if data.shape[1] > 30:
         break_num = 100000
     else:
-        break_num = 1000000
+        break_num = 300000
     try:
         for i in chunks([tuple(x) for x in data.where((pd.notnull(data)), None).values], break_num):
             cursor.executemany(sql, i)

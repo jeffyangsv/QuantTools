@@ -313,9 +313,13 @@ def QA_fetch_stock_divyield(code, start, end=None, format='pd',type = 'day', col
         try:
             res = res.drop_duplicates(
                 (['dir_dcl_date', 'a_stockcode']))
-            res = res.ix[:, ['a_stockcode', 'a_stocksname', 'div_info', 'div_type_code', 'bonus_shr',
+            # res = res.ix[:, ['a_stockcode', 'a_stocksname', 'div_info', 'div_type_code', 'bonus_shr',
+            #                  'cash_bt', 'cap_shr', 'epsp', 'ps_cr', 'ps_up', 'reg_date', 'dir_dcl_date',
+            #                  'a_stockcode1', 'ex_divi_date', 'prg', 'report_date', 'crawl_date']]
+            res = res[['a_stockcode', 'a_stocksname', 'div_info', 'div_type_code', 'bonus_shr',
                              'cash_bt', 'cap_shr', 'epsp', 'ps_cr', 'ps_up', 'reg_date', 'dir_dcl_date',
-                             'a_stockcode1', 'ex_divi_date', 'prg', 'report_date', 'crawl_date']]
+                             'a_stockcode1', 'ex_divi_date', 'prg', 'report_date', 'crawl_date']].iloc[0:]
+
             res['reg_date'] = res['reg_date'].apply(lambda x: datetime.datetime.fromtimestamp(math.floor(x)))
             res['crawl_date'] = res['crawl_date'].apply(lambda x: datetime.datetime.fromtimestamp(math.floor(x)))
             res['report_date'] = res['report_date'].apply(lambda x: datetime.datetime.fromtimestamp(math.floor(x)))
@@ -388,7 +392,7 @@ def QA_fetch_stock_fianacial(code, start, end = None, format='pd', collections=D
         try:
             res.columns = [i.lower() if i == 'CODE' else i for i in list(res.columns)]
             res = res.drop(['date_stamp','_id'], axis=1).drop_duplicates((['code', 'date']))
-            res['RNG_RES'] = res['AVG60_RNG'] *60 / res['RNG_60']
+            res['RNG_RES'] = res['AVG60_RNG'].astype('float') * 60 / res['RNG_60'].astype('float')
         except:
             res = None
         if format in ['P', 'p', 'pandas', 'pd']:

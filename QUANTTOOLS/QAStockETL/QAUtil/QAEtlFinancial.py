@@ -239,7 +239,7 @@ ADD_MONTHS(trunc(ADD_MONTHS(A.REPORT_DATE, 0),'year'),3) -1 AS BG,
 (A.FIXEDASSETS + bg.FIXEDASSETS) / 2 AS AVGFIXEDASSETS,
 (A.GOODWILL + bg.GOODWILL) / 2 AS AVGGOODWILL,
 (A.INVENTORY + bg.INVENTORY) / 2 AS AVGINVENTORY,
-(A.TOTALLIQUIDASSETS + bg.TOTALLIQUIDASSETS) / 2AS AVGTOTALLIQUIDASSETS,
+(A.TOTALLIQUIDASSETS + bg.TOTALLIQUIDASSETS) / 2 AS AVGTOTALLIQUIDASSETS,
 (A.TOTALLIABILITIES + bg.TOTALLIABILITIES) / 2 AS AVGTOTALLIABILITIES,
 (A.ACCOUNTSRECEIVABLES + bg.ACCOUNTSRECEIVABLES) / 2 AS AVGACCOUNTSRECEIVABLES,
 (A.INTERCOMPANYRECEIVABLES + bg.INTERCOMPANYRECEIVABLES) / 2 AS AVGINTERCOMPANYRECEIVABLES,
@@ -1150,12 +1150,14 @@ SELECT A.CODE,
         pass
     cursor.execute(sql1)
     conn.commit()
+    QA_util_log_info("stock financial TTM data has been stored into oracle")
     try:
         cursor.execute('''drop table stock_financial_analysis''')
     except:
         pass
     cursor.execute(sql2)
     conn.commit()
+    QA_util_log_info("stock financial analysis data has been stored into oracle")
     QA_util_log_info("financial TTM report has been stored")
     cursor.close()
     conn.commit()

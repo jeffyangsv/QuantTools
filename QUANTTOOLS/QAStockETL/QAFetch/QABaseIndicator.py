@@ -5,6 +5,7 @@ from QUANTTOOLS.QAStockETL.QAUtil import QA_util_get_pre_trade_date,QA_util_get_
 from QUANTTOOLS.QAStockETL.QAUtil.base_func import uspct
 import numpy as np
 import pandas as pd
+from packaging import version
 
 def QA_fetch_get_stock_etlday(codes, start=None, end=None):
     if start is None:
@@ -57,7 +58,12 @@ def QA_fetch_get_stock_etlday(codes, start=None, end=None):
                                                                 'NEGRT_CNT90','POSRT_CNT90','NEGRT_MEAN90','POSRT_MEAN90']]
     except:
         res=None
-    return(res)
+    if (version.parse(pd.__version__) >= version.parse('1.3.0')) and res is not None:
+        res = res.fillna(np.nan)
+        res = res.replace({np.nan: None})
+        return (res)
+    else:
+        return(res)
 
 def QA_fetch_get_usstock_etlday(codes, start=None, end=None):
     if start is None:
@@ -110,7 +116,12 @@ def QA_fetch_get_usstock_etlday(codes, start=None, end=None):
                                                                 'NEGRT_CNT90','POSRT_CNT90','NEGRT_MEAN90','POSRT_MEAN90']]
     except:
         res=None
-    return(res)
+    if (version.parse(pd.__version__) >= version.parse('1.3.0')) and res is not None:
+        res = res.fillna(np.nan)
+        res = res.replace({np.nan: None})
+        return (res)
+    else:
+        return(res)
 
 def QA_fetch_get_stock_etlhalf(codes, start=None, end=None):
     if start is None:
@@ -157,7 +168,12 @@ def QA_fetch_get_stock_etlhalf(codes, start=None, end=None):
                                                                 'MAMT_5','MAMT_10','MAMT_20','MAMT_30','MAMT_60','MAMT_90']]
     except:
         res=None
-    return(res)
+    if (version.parse(pd.__version__) >= version.parse('1.3.0')) and res is not None:
+        res = res.fillna(np.nan)
+        res = res.replace({np.nan: None})
+        return (res)
+    else:
+        return(res)
 
 def QA_fetch_get_stock_etlreal(codes, start=None, end=None):
     if start is None:
@@ -217,7 +233,12 @@ def QA_fetch_get_stock_etlreal(codes, start=None, end=None):
         res = res.assign(date_stamp=res['date'].apply(lambda x: QA_util_date_stamp(str(x)[0:10])))
     except:
         res=None
-    return(res)
+    if (version.parse(pd.__version__) >= version.parse('1.3.0')) and res is not None:
+        res = res.fillna(np.nan)
+        res = res.replace({np.nan: None})
+        return (res)
+    else:
+        return(res)
 
 def QA_fetch_get_index_etlday(codes, start=None, end=None):
     if start is None:
@@ -266,7 +287,12 @@ def QA_fetch_get_index_etlday(codes, start=None, end=None):
                                                                 'NEGRT_CNT90','POSRT_CNT90','NEGRT_MEAN90','POSRT_MEAN90']]
     except:
         res=None
-    return(res)
+    if (version.parse(pd.__version__) >= version.parse('1.3.0')) and res is not None:
+        res = res.fillna(np.nan)
+        res = res.replace({np.nan: None})
+        return (res)
+    else:
+        return(res)
 
 if __name__ == '__main__':
     pass

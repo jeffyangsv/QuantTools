@@ -30,6 +30,8 @@ import asyncio
 import cx_Oracle
 from QUANTAXIS.QAUtil import QA_util_log_info
 from QUANTTOOLS.QAStockETL.QAData.database_settings import (Oracle_Database, Oracle_User, Oracle_Password, Oralce_Server, MongoDB_Server, MongoDB_Database)
+from packaging import version
+import numpy as np
 
 ORACLE_PATH1 = 'oracle+cx_oracle://{user}:{password}@{server}:1521/{database}'.format(database = Oracle_Database, password = Oracle_Password, server = Oralce_Server, user = Oracle_User)
 ORACLE_PATH2 = '{user}/{password}@{server}:1521/{database}'.format(database = Oracle_Database, password = Oracle_Password, server = Oralce_Server, user = Oracle_User)
@@ -114,13 +116,18 @@ def QA_util_sql_store_mysql(data, table_name, ORACLE_PATH=ORACLE_PATH1, if_exist
 
     conn = cx_Oracle.connect(ORACLE_PATH2)
     cursor = conn.cursor()
+    if version.parse(pd.__version__) >= version.parse('1.3.0'):
+        data = data.fillna(np.nan)
+        data = data.replace({np.nan: None})
+    else:
+        data = data.where(pd.notnull(data), None)
 
     if data.shape[1] > 30:
         break_num = 100000
     else:
         break_num = 300000
     try:
-        for i in chunks([tuple(x) for x in data.where((pd.notnull(data)), None).values], break_num):
+        for i in chunks([tuple(x) for x in data.values], break_num):
             cursor.executemany(sql, i)
         QA_util_log_info("{} has been stored into Table {} Mysql DataBase ".format(
             table_name, table_name))

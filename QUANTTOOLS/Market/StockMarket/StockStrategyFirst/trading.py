@@ -1,6 +1,7 @@
 from QUANTTOOLS.Message import send_actionnotice, send_email
 from QUANTTOOLS.Model.StockModel.StrategyXgboost import QAStockXGBoost
-from QUANTTOOLS.Trader import trade_roboot, get_Client
+from QUANTTOOLS.Trader import  get_Client
+from QUANTTOOLS.Market.MarketTools.TradingTools.trading import trade_roboot
 from .setting import working_dir, percent
 from QUANTAXIS.QAUtil import QA_util_log_info
 import time

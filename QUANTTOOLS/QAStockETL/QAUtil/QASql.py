@@ -123,9 +123,9 @@ def QA_util_sql_store_mysql(data, table_name, ORACLE_PATH=ORACLE_PATH1, if_exist
         data = data.where(pd.notnull(data), None)
 
     if data.shape[1] > 30:
-        break_num = 100000
+        break_num = 50000    #可用内存大的话，可以调大这个参数
     else:
-        break_num = 300000
+        break_num = 100000
     try:
         for i in chunks([tuple(x) for x in data.values], break_num):
             cursor.executemany(sql, i)

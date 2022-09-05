@@ -9,4 +9,4 @@ Quantitative Financial FrameWork
 
 ![logo](https://github.com/QUANTAXIS/QUANTAXIS/blob/master/Documents/logo/QUANTAXIS_LOGO_LAST_small.jpg)
 
-for quantaxis.
+

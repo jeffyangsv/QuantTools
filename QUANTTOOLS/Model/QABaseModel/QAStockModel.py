@@ -6,6 +6,7 @@ from QUANTTOOLS.Message import send_email, send_actionnotice
 from QUANTTOOLS.QAStockETL.QAFetch import QA_fetch_code_old,QA_fetch_stock_all,QA_fetch_code_new,QA_fetch_stock_om_all
 from QUANTTOOLS.QAStockETL.FuncTools.TransForm import normalization, standardize,series_to_supervised
 from QUANTAXIS.QAUtil import QA_util_if_trade,QA_util_get_pre_trade_date,QA_util_get_real_date
+import re
 
 class QAStockModel(QAModel):
 
@@ -72,14 +73,17 @@ class QAStockModel(QAModel):
             pass
 
         QA_util_log_info('##JOB Now Reshape Different Columns ===== from {_from} to {_to}'.format(_from=start,_to = end), ui_log = None)
+        if self.n_in is not None:
+
+            shuffle_data = data[list(set([re.sub(r"\((.*?)\)|\{(.*?)\}|\[(.*?)\]", "", i) for i in self.cols]))].groupby('code').apply(series_to_supervised, n_in = self.n_in)
+
+            data = shuffle_data.join(data)
+
         cols1 = [i for i in data.columns if i not in [ 'moon','star','mars','venus','sun','MARK','date','datetime',
                                                        'OPEN_MARK','PASS_MARK','TARGET','TARGET3',
                                                        'TARGET4','TARGET5','TARGET10','TARGET20','AVG_TARGET','INDEX_TARGET',
                                                        'INDUSTRY','INDEX_TARGET3','INDEX_TARGET4','INDEX_TARGET5',
                                                        'INDEX_TARGET10','INDEX_TARGET20','date_stamp','PRE_DATE','next_date']]
-        if self.n_in is not None:
-            data = data[[i for i in self.data.columns if i not in ['next_date','PRE_DATE','PASS_MARK','TARGET',
-                                                                             'TARGET3','TARGET4','TARGET5','TARGET10','TARGET20']]].groupby('code').apply(series_to_supervised, n_in = self.n_in).join(data[['next_date','PRE_DATE','PASS_MARK','TARGET','TARGET3','TARGET4','TARGET5','TARGET10','TARGET20']])
 
         train = pd.DataFrame()
         n_cols = []

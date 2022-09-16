@@ -10,7 +10,7 @@ import time
 import pandas as pd
 import numpy as np
 
-def data_collect(code_list,trading_date,data_15min,k_per=1.01):
+def data_collect(code_list,trading_date,data_15min,k_per=1.03):
     try:
 
         source_data = QA_fetch_get_stock_vwap_min(code_list, QA_util_get_pre_trade_date(trading_date,10), trading_date, type='1')
@@ -56,20 +56,26 @@ def data_collect(code_list,trading_date,data_15min,k_per=1.01):
         data.loc[(data.pct_chg <= -5) & (data.CLOSE_K < 0) & (data.VAMP_K < 0.01), "msg"] = '强制止损'
 
         #底部金叉
-        data.loc[(data.RRNG_15M.abs() < 0.03)&(data.VAMP_JC == 1) & (data.CLOSE_K > 0) & (data.MIN_V_15M > data.close),
+        data.loc[(data.RRNG_15M.abs() < 0.03)&(data.VAMP_JC == 1) & (data.VAMPC_K >= 0.1)  & (data.CLOSE_K > 0) & (data.VAMP_K >= 0.005) & (data.MIN_V_15M * k_per > data.close),
                  "signal"] = 1
-        data.loc[(data.RRNG_15M.abs() < 0.03)&(data.VAMP_JC == 1) & (data.CLOSE_K > 0) & (data.MIN_V_15M > data.close),
+        data.loc[(data.RRNG_15M.abs() < 0.03)&(data.VAMP_JC == 1) & (data.VAMPC_K >= 0.1)  & (data.CLOSE_K > 0) & (data.VAMP_K >= 0.005) & (data.MIN_V_15M * k_per > data.close),
                  "msg"] = 'VMAP金叉'
 
-        #超跌
-        data.loc[(data.DISTANCE < -0.03) & (data.VAMP_K > -0.03) & (data.CLOSE_K > 0) & (data.MIN_V_15M * k_per > data.close),
+        #放量金叉
+        data.loc[(data.VAMP_JC == 1) & (data.CLOSE_K > 0.1) & (data.VAMPC_K >= 0.1) & (data.VAMP_K > 0) & (data.camt_vol > 1),
                  "signal"] = 1
-        data.loc[(data.DISTANCE < -0.03) & (data.VAMP_K > -0.03) & (data.CLOSE_K > 0) & (data.MIN_V_15M * k_per > data.close),
+        data.loc[(data.VAMP_JC == 1) & (data.CLOSE_K > 0.1) & (data.VAMPC_K >= 0.1) & (data.VAMP_K > 0) & (data.camt_vol > 1),
+                 "msg"] = 'VMAP放量金叉'
+
+        #超跌
+        data.loc[(data.DISTANCE < -0.03) & (data.VAMP_K > -0.03) & (data.CLOSE_K > 0) & (data.MIN_V_15M * k_per > data.close) & (data.camt_vol < 0.4),
+                 "signal"] = 1
+        data.loc[(data.DISTANCE < -0.03) & (data.VAMP_K > -0.03) & (data.CLOSE_K > 0) & (data.MIN_V_15M * k_per > data.close) & (data.camt_vol < 0.4),
                  "msg"] = 'VMAP超跌'
 
         #底部追涨
-        data.loc[(data.VAMPC_K >= 0.2) & (data.MIN_V_15M * k_per > data.close) & (data.DISTANCE < 0.01), "signal"] = 1
-        data.loc[(data.VAMPC_K >= 0.2) & (data.MIN_V_15M * k_per > data.close) & (data.DISTANCE < 0.01), "msg"] = '追涨:VMAP上升通道'
+        data.loc[(data.VAMPC_K >= 0.2) & (data.VAMP_K > 0.2) & (data.MIN_V_15M * k_per > data.close) & (data.DISTANCE < 0.02) & (data.camt_vol > 0.8), "signal"] = 1
+        data.loc[(data.VAMPC_K >= 0.2) & (data.VAMP_K > 0.2) & (data.MIN_V_15M * k_per > data.close) & (data.DISTANCE < 0.02) & (data.camt_vol > 0.8), "msg"] = '追涨:VMAP上升通道'
 
         return(data)
     except:
@@ -106,16 +112,14 @@ def code_select(target_list, position, trading_date, mark_tm):
                                  'MAX_V_15M','SIGN_DW_30M','MA60_C_15M','MA5_15M','MA10_15M','MA20_15M','MA60_15M']], ui_log=None)
 
     QA_util_log_info('##Target Pool ==================== {}'.format(stm), ui_log=None)
-    QA_util_log_info(data_15min[(data_15min.RRNG_15M.abs() < 0.03)][
-                         ['SIGN_30M','SIGN_DW_30M','RRNG_30M','MAX_V_15M','CLOSE_15M','MIN_V_15M',
-                          'MAX_V_15M','SIGN_DW_30M','MA60_C_15M','MA5_15M','MA10_15M','MA20_15M','MA60_15M']], ui_log=None)
+    QA_util_log_info(data_15min[(data_15min.RRNG_15M.abs() < 0.03)], ui_log=None)
     buy_list = data_15min[(data_15min.RRNG_15M.abs() < 0.03)]
     QA_util_log_info('##buy_list ==================== {}'.format(buy_list), ui_log=None)
     return(buy_list, data_15min)
 
 
 def signal(target_list, buy_list, position, tmp_data, trading_date, mark_tm):
-
+    QA_util_log_info(target_list)
     # 计算信号 提供基础信息 example
     # 输出1 signal 计划持有的code 目前此方案 1:表示持有 0:表示不持有
     # 输出2 signal 进出信号 signal 1:表示进场信号 0:表示无信号 -1:表示卖出信号
@@ -143,10 +147,16 @@ def signal(target_list, buy_list, position, tmp_data, trading_date, mark_tm):
 
     stm = trading_date + ' ' + mark_tm
     try:
-        data = data_collect(code_list, trading_date, tmp_data, k_per=1.01)
+        data = data_collect(code_list, trading_date, tmp_data, k_per=1.03)
     except:
         QA_util_log_info('##JOB Signal Failed ====================', ui_log=None)
         data = None
+
+    #QA_util_log_info('##JOB 300910 ====================', ui_log=None)
+    #QA_util_log_info(data[(data.code == '300910')&(data.date == trading_date)][['RRNG_15M','VAMP_JC','CLOSE_K','VAMPC_K','VAMP_K','DISTANCE','close','MIN_V_15M','camt_vol','signal','msg']]
+    #                 )
+    #QA_util_log_info(data[(data.code == '300910')&(data.date == trading_date)&(data.signal == 1)][['RRNG_15M','VAMP_JC','CLOSE_K','VAMPC_K','VAMP_K','DISTANCE','close','MIN_V_15M','camt_vol','signal','msg']]
+    #                 )
 
     if data is not None:
         data = data.sort_index().loc[(stm),]
@@ -161,8 +171,7 @@ def signal(target_list, buy_list, position, tmp_data, trading_date, mark_tm):
         data.loc[data.code.isin([i for i in code_list if i not in target_list]) & (data.signal.isin([1])), 'signal'] = None
         #if len([i for i in position.code.tolist() if i not in buy_list]) > 0:
         #    data.loc[[i for i in position.code.tolist() if i not in buy_list]][data.signal == 1, ['signal']] = None
-        QA_util_log_info(data[['SIGN_30M','RRNG_30M','VAMP_JC','VAMP_SC','VAMP_K','CLOSE_K','VAMPC_K','DISTANCE',
-                               'close','MIN_V_30M','MAX_V_30M','up_price','signal','msg']], ui_log=None)
+        QA_util_log_info(data[['RRNG_15M','VAMP_JC','CLOSE_K','VAMPC_K','VAMP_K','DISTANCE','close','MIN_V_15M','camt_vol','signal','msg']], ui_log=None)
         QA_util_log_info('##Buy DataFrame ====================', ui_log=None)
         QA_util_log_info(data[data.signal == 1][['SIGN_30M','RRNG_30M','VAMP_JC','VAMP_SC','VAMP_K','CLOSE_K','VAMPC_K','DISTANCE',
                                                  'close','MIN_V_30M','MAX_V_30M','up_price','signal','msg']], ui_log=None)

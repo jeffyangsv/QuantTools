@@ -3,28 +3,60 @@ from QUANTTOOLS.Model.FactorTools.QuantMk import get_index_quant_data
 from QUANTTOOLS.Model.QABaseModel.QAModel import QAModel
 from QUANTAXIS.QAUtil import QA_util_log_info
 from QUANTTOOLS.Message import send_email, send_actionnotice
+from QUANTTOOLS.QAStockETL.FuncTools.TransForm import normalization, standardize,series_to_supervised
+import re
 
 class QAIndexModel(QAModel):
 
-    def get_data(self, start, end, code=None, type ='model', norm_type=None):
+    def get_data(self, start, end, code=None, type ='model', norm_type=None, block=False, sub_block=False, ST=False):
         QA_util_log_info('##JOB Got Index Data by {type} ==== from {_from} to {_to}'.format(type=type, _from=start, _to=end), ui_log = None)
         self.data = get_index_quant_data(start, end, code=code, type = type, norm_type=norm_type)
         self.info['code'] = code
         self.info['norm_type'] = norm_type
         print(self.data.shape)
 
+    def shuffle(self, cols, n_in = None):
+        QA_util_log_info('##JOB01 Now Data shuffle {}'.format(n_in))
+        if n_in is not None:
+            if cols is not None:
+                shuffle_data = self.data[cols].groupby('code').apply(series_to_supervised, n_in = n_in)
+            else:
+                shuffle_data = self.data[[i for i in self.data.columns if i not in [ 'moon','star','mars','venus','sun','MARK','date','datetime','TARGET20',
+                                                                                      'OPEN_MARK','PASS_MARK','TARGET','TARGET3',
+                                                                                      'TARGET4','TARGET5','TARGET10','AVG_TARGET','INDEX_TARGET',
+                                                                                      'INDUSTRY','INDEX_TARGET3','INDEX_TARGET4','INDEX_TARGET5',
+                                                                                      'INDEX_TARGET10','INDEX_TARGET20','date_stamp','PRE_DATE','next_date']]].groupby('code').apply(series_to_supervised, n_in = n_in)
+
+            self.data = shuffle_data.join(self.data[['PASS_MARK','INDEX_TARGET',
+                                                     'INDEX_TARGET3','INDEX_TARGET4','INDEX_TARGET5',
+                                                     'INDEX_TARGET10','INDEX_TARGET20']])
+
+        self.info['n_in'] = n_in
+        QA_util_log_info('##JOB01 Now Data shuffle Finish')
+        QA_util_log_info(self.data.shape)
+
     def model_predict(self, start, end, code = None, type='crawl'):
+        self.get_param()
+
         if code is not None:
             self.code = code
         QA_util_log_info('##JOB Got Index Quant Data by {type} ==== from {_from} to {_to} target:{target}'.format(type=type, _from=start, _to=end, target = self.target), ui_log = None)
-        data = get_index_quant_data(start, end, code = self.code, type= type, norm_type=self.norm_type)
+        data = get_index_quant_data(start, end, type= type)
 
         QA_util_log_info('##JOB Now Reshape Different Columns ===== from {_from} to {_to}'.format(_from=start,_to = end), ui_log = None)
+
+        if self.n_in is not None:
+
+            shuffle_data = data[list(set([re.sub(r"\((.*?)\)|\{(.*?)\}|\[(.*?)\]", "", i) for i in self.cols]))].groupby('code').apply(series_to_supervised, n_in = self.n_in)
+
+            data = shuffle_data.join(data)
+
         cols1 = [i for i in data.columns if i not in [ 'moon','star','mars','venus','sun','MARK','date','datetime','TARGET20',
                                                        'OPEN_MARK','PASS_MARK','TARGET','TARGET3',
                                                        'TARGET4','TARGET5','TARGET10','AVG_TARGET','INDEX_TARGET',
                                                        'INDUSTRY','INDEX_TARGET3','INDEX_TARGET4','INDEX_TARGET5',
                                                        'INDEX_TARGET10','INDEX_TARGET20','date_stamp','PRE_DATE','next_date']]
+
         train = pd.DataFrame()
         n_cols = []
         for i in self.cols:
@@ -33,6 +65,7 @@ class QAIndexModel(QAModel):
             else:
                 train[i] = 0
                 n_cols.append(i)
+
         train.index = data.index
         QA_util_log_info('##JOB Now Got Different Columns ===== from {_from} to {_to}'.format(_from=start,_to = end), ui_log = None)
         QA_util_log_info(n_cols)

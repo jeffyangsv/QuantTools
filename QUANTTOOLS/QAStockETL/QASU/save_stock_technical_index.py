@@ -86,7 +86,7 @@ def QA_SU_save_stock_technical_index_his(codes=None, start_date=None,end_date=No
     if start_date == None:
         if end_date == None:
             end_date = QA_util_today_str()
-            start_date = "2015-01-01"
+            start_date = "2018-01-01"
         else:
             start_date = QA_util_get_pre_trade_date(end_date,1)
     else:
@@ -199,7 +199,7 @@ def QA_SU_save_stock_technical_week_his(codes = None,start_date=None,end_date=No
     if start_date == None:
         if end_date == None:
             end_date = QA_util_today_str()
-            start_date = "2015-01-01"
+            start_date = "2018-01-01"
         else:
             start_date = end_date
     else:
@@ -426,7 +426,7 @@ def QA_SU_save_index_technical_index_his(codes = None,start_date=None,end_date=N
     if start_date == None:
         if end_date == None:
             end_date = QA_util_today_str()
-            start_date = "2015-01-01"
+            start_date = "2018-01-01"
         else:
             start_date = QA_util_get_pre_trade_date(end_date,1)
     else:
@@ -537,7 +537,7 @@ def QA_SU_save_index_technical_week_his(codes = None,start_date=None,end_date=No
     if start_date == None:
         if end_date == None:
             end_date = QA_util_today_str()
-            start_date = "2015-01-01"
+            start_date = "2018-01-01"
         else:
             start_date = end_date
     else:
@@ -779,7 +779,7 @@ def QA_SU_save_stock_technical_hour_his(codes=None, start_date=None,end_date=Non
     if start_date == None:
         if end_date == None:
             end_date = QA_util_today_str()
-            start_date = "2022-01-01"
+            start_date = "2021-01-01"
         else:
             start_date = QA_util_get_pre_trade_date(end_date,1)
     else:
@@ -925,7 +925,7 @@ def QA_SU_save_index_technical_hour_his(codes = None,start_date=None,end_date=No
     if start_date == None:
         if end_date == None:
             end_date = QA_util_today_str()
-            start_date = "2022-01-01"
+            start_date = "2021-01-01"
         else:
             start_date = QA_util_get_pre_trade_date(end_date,1)
     else:
@@ -1060,7 +1060,7 @@ def QA_SU_save_stock_technical_15min_his(codes=None, start_date=None,end_date=No
     if start_date == None:
         if end_date == None:
             end_date = QA_util_today_str()
-            start_date = "2022-01-01"
+            start_date = "2021-01-01"
         else:
             start_date = QA_util_get_pre_trade_date(end_date,1)
     else:
@@ -1181,7 +1181,7 @@ def QA_SU_save_stock_technical_30min_his(codes=None, start_date=None,end_date=No
     if start_date == None:
         if end_date == None:
             end_date = QA_util_today_str()
-            start_date = "2022-01-01"
+            start_date = "2021-01-01"
         else:
             start_date = QA_util_get_pre_trade_date(end_date,1)
     else:
@@ -1302,7 +1302,7 @@ def QA_SU_save_index_technical_15min_his(codes = None,start_date=None,end_date=N
     if start_date == None:
         if end_date == None:
             end_date = QA_util_today_str()
-            start_date = "2022-01-01"
+            start_date = "2021-01-01"
         else:
             start_date = QA_util_get_pre_trade_date(end_date,1)
     else:
@@ -1423,7 +1423,7 @@ def QA_SU_save_index_technical_30min_his(codes = None,start_date=None,end_date=N
     if start_date == None:
         if end_date == None:
             end_date = QA_util_today_str()
-            start_date = "2022-01-01"
+            start_date = "2021-01-01"
         else:
             start_date = QA_util_get_pre_trade_date(end_date,1)
     else:

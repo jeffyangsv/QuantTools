@@ -70,7 +70,7 @@ from QUANTTOOLS.QAStockETL.QAFetch.QAQuery import (QA_fetch_interest_rate,QA_fet
 
                                                    QA_fetch_future_target,
 
-                                                   QA_fetch_index_name,QA_fetch_index_cate,QA_fetch_index_info,QA_fetch_stock_industryinfo,
+                                                   QA_fetch_index_name,QA_fetch_index_cate,QA_fetch_index_info,QA_fetch_stock_industryinfo,QA_fetch_stock_industryinfo_bytdxhy,
 
                                                    QA_fetch_index_week,QA_fetch_index_month,QA_fetch_index_year,
 
@@ -149,7 +149,7 @@ from QUANTTOOLS.QAStockETL.QAFetch.QATdx import (QA_fetch_get_stock_close,fetch_
 
                                                  QA_fetch_get_stock_half_real,
 
-                                                 QA_fetch_get_stock_half,QA_fetch_get_stock_half_realtime,
+                                                 QA_fetch_get_stock_half,QA_fetch_get_stock_half_realtime,QA_fetch_get_stock_half_realtime_from_akshare,
 
                                                  QA_fetch_get_usstock_pe,QA_fetch_get_usstock_pb)
 
@@ -168,3 +168,5 @@ from QUANTTOOLS.QAStockETL.QAFetch.QAGold import QA_fetch_get_gold_day,QA_fetch_
 from QUANTTOOLS.QAStockETL.QAFetch.QAMoney import QA_fetch_get_money_day,QA_fetch_get_money_min,QA_fetch_get_diniw_min
 
 from QUANTTOOLS.QAStockETL.QAFetch.QAGlobalIndex import QA_fetch_get_globalindex_day, QA_fetch_get_innerfuture_day
+
+from QUANTTOOLS.QAStockETL.QAFetch.QAAkshare import QA_fetch_get_stock_day_from_ak

@@ -73,7 +73,7 @@ def QA_SU_save_stock_vwap_his(codes=None, start_date=None,end_date=None,client=D
     if start_date == None:
         if end_date == None:
             end_date = QA_util_today_str()
-            start_date = "2006-01-01"
+            start_date = "2021-01-01"
         else:
             start_date = QA_util_get_pre_trade_date(end_date,1)
     else:

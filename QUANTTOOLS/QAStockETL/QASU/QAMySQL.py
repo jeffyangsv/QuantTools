@@ -51,7 +51,7 @@ def QA_etl_stock_list(ui_log= None):
     QA_util_log_info(
         '##JOB ETL STOCK LIST HAS BEEN SAVED ==== {}'.format(str(datetime.date.today())), ui_log)
 
-def QA_etl_stock_shares(ui_log= None):
+def QA_etl_stock_shares( ui_log= None):
     QA_util_log_info(
         '##JOB Now ETL STOCK SHARES ==== {}'.format(str(datetime.date.today())), ui_log)
     codes = list(QA_fetch_stock_all()['code'])
@@ -197,10 +197,13 @@ def QA_etl_stock_financial(type = "crawl", start_date = str(datetime.date.today(
         '##JOB Now ETL STOCK FINANCIAL REPORT ==== {}'.format(start_date), ui_log)
     codes = list(QA_fetch_stock_all()['code'])
     if type == 'all':  #需要内存足够大
-        data = QA_fetch_financial_report_adv(codes).data
+        #update_date = '2022-01-01'
+        #QA_util_log_info("更新数据 {} ==== {},如果是初始化数据，请不传时间".format(update_date,start_date))
+        data = QA_fetch_financial_report_adv(codes).data    #初始化数据时使用
+        # data = QA_fetch_financial_report_adv(codes,update_date).data
         columns = [i for i in list(data.columns) if
                    i.startswith('unknown') == False and i.isdigit() == False and i.startswith('IS_R') == False]
-        QA_util_sql_store_mysql(data[columns].reset_index(drop=True).fillna(0), "stock_financial1",
+        QA_util_sql_store_mysql(data[columns].reset_index(drop=True).fillna(0), "stock_financial",
                                 if_exists='replace')
     if type == 'slowall' and len(codes) > 0:  #全部股票一次性处理太耗内存，逐个股票插入数据，时间换空间
         conn = cx_Oracle.connect(ORACLE_PATH2)

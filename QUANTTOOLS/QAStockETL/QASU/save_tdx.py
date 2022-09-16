@@ -13,7 +13,7 @@ from QUANTTOOLS.QAStockETL.QAFetch.QATdx import (QA_fetch_get_usstock_adj,QA_fet
 from QUANTTOOLS.QAStockETL.QAFetch import (fetch_get_stock_code_all,QA_fetch_get_stock_etlreal,
                                            QA_fetch_get_usstock_list_sina, QA_fetch_get_usstock_list_akshare,
                                            QA_fetch_get_stock_half_realtime, QA_fetch_get_usstock_day_xq,
-
+                                           QA_fetch_get_stock_day_from_ak,
                                            QA_fetch_stock_om_all,QA_fetch_stock_all,QA_fetch_usstock_day,)
 from QUANTAXIS.QAData.data_fq import _QA_data_stock_to_fq
 from QUANTAXIS.QAFetch.QAQuery import QA_fetch_stock_day
@@ -2089,6 +2089,95 @@ def QA_SU_save_single_index_min(code : str, time_type : list, client=DATABASE, u
     else:
         QA_util_log_info(' ERROR CODE \n ', ui_log=ui_log)
         QA_util_log_info(err, ui_log=ui_log)
+
+def QA_SU_save_single_stock_day_from_akshare(code : str, client= DATABASE, ui_log=None):
+    '''
+     save single stock_day
+    保存单个股票日线数据
+    :param code: 要保存数据的股票代码
+    :param client:
+    :param ui_log:  给GUI qt 界面使用
+    :param ui_progress: 给GUI qt 界面使用
+    '''
+    #stock_list = QA_fetch_get_stock_list().code.unique().tolist()
+    coll_stock_day = client.stock_day
+    coll_stock_day.create_index(
+        [("code",
+          pymongo.ASCENDING),
+         ("date_stamp",
+          pymongo.ASCENDING)]
+    )
+    err = []
+
+    def __saving_work(code, coll_stock_day):
+        try:
+            QA_util_log_info(
+                '##JOB01 Now Saving STOCK_DAY==== {}'.format(str(code)),
+                ui_log
+            )
+
+            # 首选查找数据库 是否 有 这个代码的数据
+            ref = coll_stock_day.find({'code': str(code)[0:6]})
+            end_date = str(now_time())[0:10]
+
+            # 当前数据库已经包含了这个代码的数据， 继续增量更新
+            # 加入这个判断的原因是因为如果股票是刚上市的 数据库会没有数据 所以会有负索引问题出现
+            if ref.count() > 0:
+
+                # 接着上次获取的日期继续更新
+                start_date = ref[ref.count() - 1]['date']
+
+                QA_util_log_info(
+                    'UPDATE_STOCK_DAY \n Trying updating {} from {} to {}'
+                    .format(code,
+                            start_date,
+                            end_date),
+                    ui_log
+                )
+                if start_date != end_date:
+                    coll_stock_day.insert_many(
+                        QA_util_to_json_from_pandas(
+                            QA_fetch_get_stock_day_from_ak(
+                                str(code),
+                                QA_util_get_next_day(start_date),
+                                end_date,
+                                '00'
+                            )
+                        )
+                    )
+
+            # 当前数据库中没有这个代码的股票数据， 从1990-01-01 开始下载所有的数据
+            else:
+                start_date = '1990-01-01'
+                QA_util_log_info(
+                    'UPDATE_STOCK_DAY \n Trying updating {} from {} to {}'
+                    .format(code,
+                            start_date,
+                            end_date),
+                    ui_log
+                )
+                if start_date != end_date:
+                    coll_stock_day.insert_many(
+                        QA_util_to_json_from_pandas(
+                            QA_fetch_get_stock_day_from_ak(
+                                str(code),
+                                start_date,
+                                end_date,
+                                '00'
+                            )
+                        )
+                    )
+        except Exception as error0:
+            print(error0)
+            err.append(str(code))
+
+    __saving_work(code, coll_stock_day)
+
+    if len(err) < 1:
+        QA_util_log_info('SUCCESS save stock day ^_^', ui_log)
+    else:
+        QA_util_log_info('ERROR CODE \n ', ui_log)
+        QA_util_log_info(err, ui_log)
 
 if __name__ == '__main__':
     pass

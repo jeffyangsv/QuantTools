@@ -1,4 +1,4 @@
-from QUANTTOOLS.QAStockETL.Check.check_data import (check_stock_day, check_sinastock_day,
+from QUANTTOOLS.QAStockETL.Check.check_data import (check_stock_day, check_sinastock_day,check_akstock_day,
                                                     check_stock_60min, check_sinastock_60min,
                                                     check_stock_30min, check_sinastock_30min,
                                                     check_stock_15min, check_sinastock_15min,

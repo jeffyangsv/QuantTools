@@ -11,7 +11,7 @@ from QUANTTOOLS.QAStockETL.QASU import (QA_SU_save_report_calendar_day, QA_SU_sa
                                         QA_SU_save_stock_financial_sina_day,QA_SU_save_stock_financial_sina_his,
                                         QA_SU_save_stock_shares_sina_day,QA_SU_save_stock_shares_sina_his,
                                         QA_SU_save_stock_financial_wy_day,QA_SU_save_stock_financial_wy_his,
-                                        QA_SU_save_stock_info_tushare
+                                        QA_SU_save_stock_info_tushare,QA_SU_save_single_stock_day_from_akshare
                                         )
 
 ###Stock Indicator
@@ -32,7 +32,7 @@ from QUANTTOOLS.QAStockETL.QASU import (
                                         QA_SU_save_stock_quant_data_day,QA_SU_save_stock_quant_data_his,
                                         QA_SU_save_stock_alpha101half_real,QA_SU_save_stock_alpha191half_real,
                                         QA_SU_save_hedge_alpha_day,QA_SU_save_hedge_alpha_his,
-                                        QA_SU_save_stock_vwap_day,QA_SU_save_stock_vwap_his
+                                        QA_SU_save_stock_vwap_day,QA_SU_save_stock_vwap_his,
                                         )
 
 ###Index Indicator
@@ -124,8 +124,8 @@ from QUANTTOOLS.QAStockETL.QAFetch import (
                                            QA_fetch_stock_quant_pre,QA_fetch_stock_quant_pre_adv,
                                            QA_fetch_stock_target,QA_fetch_stock_target_adv,
                                            QA_fetch_future_target,QA_fetch_future_target_adv,
-
-                                           QA_fetch_stock_industry,QA_fetch_stock_industryinfo,
+                                           QA_fetch_get_stock_day_from_ak,
+                                           QA_fetch_stock_industry,QA_fetch_stock_industryinfo,QA_fetch_stock_industryinfo_bytdxhy,
                                            QA_fetch_financial_code_wy,QA_fetch_financial_code_tdx,
                                            QA_fetch_financial_code_new,QA_fetch_financial_code_ttm,
                                            QA_fetch_stock_all,QA_fetch_stock_delist,

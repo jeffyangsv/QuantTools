@@ -66,7 +66,7 @@ if __name__ == '__main__':
     QA_etl_stock_list()
     QA_etl_stock_info()
     QA_etl_stock_xdxr('all')
-    QA_etl_stock_day( 'all')
+    QA_etl_stock_day('all')
     QA_etl_stock_financial('all')
     QA_etl_stock_calendar('all')
     QA_etl_stock_block()

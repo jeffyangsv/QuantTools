@@ -1,7 +1,7 @@
 from QUANTAXIS import QA_fetch_get_future_day, QA_fetch_stock_min_adv, QA_fetch_stock_info, QA_fetch_index_list
 from QUANTTOOLS.QAStockETL.QAData.database_settings import tdx_dir
 from QUANTAXIS.QAUtil import (QA_util_today_str, QA_util_get_pre_trade_date, QA_util_get_pre_trade_date,
-                              QA_util_get_trade_range, QA_util_get_real_date,
+                              QA_util_get_trade_range, QA_util_get_real_date,QA_util_log_info,
                               QA_util_if_trade,QA_util_get_last_day,
                               QA_util_date_stamp)
 from akshare import stock_info_a_code_name
@@ -191,6 +191,31 @@ def QA_fetch_get_stock_half_realtime(code, date = QA_util_today_str(), source = 
         res = res[res.volume > 0]
     res = res[res.date == date]
     res['date_stamp'] = res['date'].apply(lambda x: QA_util_date_stamp(str(x)[0:10]))
+    return(res)
+
+def QA_fetch_get_stock_half_realtime_from_akshare(date = QA_util_today_str()):
+    try:
+        stock_zh_a_spot_em_df = ak.stock_zh_a_spot_em()
+        res = stock_zh_a_spot_em_df[['代码', '今开', '最高', '最低', '最新价', '成交量', '成交额', '昨收']]
+
+        res = res.reset_index(drop=True).rename(columns={'代码': 'code',
+                                                         '昨收': 'prev_close',
+                                                         '今开': 'open',
+                                                         '最高': 'high',
+                                                         '最低': 'low',
+                                                         '最新价': 'close',
+                                                         '成交量': 'volume',
+                                                         '成交额': 'amount'})
+
+        res.insert(1, 'date', pd.to_datetime(date))
+        res[['open', 'high', 'low', 'close', 'volume', 'amount', 'prev_close']] = res[
+            ['open', 'high', 'low', 'close', 'volume', 'amount', 'prev_close']].apply(pd.to_numeric)
+        res['avg_price'] = res['amount'] / res['volume'] / 100
+        res = res[res.volume > 0]
+        res['date_stamp'] = res['date'].apply(lambda x: QA_util_date_stamp(str(x)[0:10]))
+    except Exception as e:
+        QA_util_log_info('Akshare get stock realtime data error. The error info is {error}'.format(error =e))
+        res = None
     return(res)
 
 def QA_fetch_get_stock_half_real(code, date, source = 'sina'):

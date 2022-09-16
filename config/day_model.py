@@ -32,9 +32,10 @@ from QUANTTOOLS.QAStockETL.Check import (check_stock_quant,check_stock_day,check
 from QUANTAXIS.QAUtil import QA_util_today_str,QA_util_get_real_date
 from QUANTTOOLS.Market.StockMarket.DailyJob.train_job import daily_train
 import time
-
+#周六执行
 if __name__ == '__main__':
     mark_day = QA_util_today_str()
+    # mark_day = '2022-08-20'
     ckeck_day = QA_util_get_real_date(mark_day)
 
     check = check_stock_day(ckeck_day)

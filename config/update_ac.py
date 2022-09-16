@@ -27,6 +27,8 @@
 
 """对应于save x
 """
+#财务数据 http://down.tdx.com.cn:8001/tdxfin/gpcw.txt
+#单个文件 http://down.tdx.com.cn:8001/tdxfin/gpcw/gpcw20220930.zip
 from  QUANTAXIS.QAUtil import QA_util_today_str
 from QUANTAXIS.QASU.main import (QA_SU_save_financialfiles_fromtdx)
 from QUANTTOOLS.QAStockETL import (QA_etl_stock_financial, QA_SU_save_fianacialTTM_momgo,QA_SU_save_stock_financial_wy_day,
@@ -39,7 +41,7 @@ if __name__ == '__main__':
 
     QA_SU_save_financialfiles_fromtdx()
     check_tdx_financial(mark_day)
-    QA_etl_stock_financial('all')
+    QA_etl_stock_financial("all")
     print("done")
 
     print("write wy financial data into sqldatabase")
@@ -49,7 +51,7 @@ if __name__ == '__main__':
     print("done")
 
     print("run financial data into sqldatabase")
-    QA_util_process_stock_financial()
-    while check_ttm_financial(mark_day) is None or check_ttm_financial(mark_day) > 0:
-        QA_SU_save_fianacialTTM_momgo()
+    # QA_util_process_stock_financial()
+    # while check_ttm_financial(mark_day) is None or check_ttm_financial(mark_day) > 0:
+    #     QA_SU_save_fianacialTTM_momgo()
     print("done")

@@ -39,10 +39,10 @@ if __name__ == '__main__':
     print("write divyield data into sqldatabase")
     QA_SU_save_usstock_list_day()
     #QA_SU_save_interest_rate() #tushare 已不能从sina获取该数据。baostock的query_deposit_rate_data接口，也只能获取到15年前的数据
-    QA_SU_save_stock_divyield_day()
+    QA_SU_save_stock_divyield_day()    #https://stock.jrj.com.cn/report/js/sz/2022-06-30.js?ts=1662081936
     QA_etl_stock_divyield("all")
     print("done")
     print("write calendar data into sqldatabase")
-    QA_SU_save_report_calendar_day()
+    QA_SU_save_report_calendar_day()     #https://app.jrj.com.cn/jds/data_ylj.php?cid=1002&_pd=&_pd2=&_pid=2022-06-30&ob=2&od=d&page=1&psize=2000&vname=plsj
     QA_etl_stock_calendar()
     print("done")

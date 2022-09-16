@@ -3,6 +3,7 @@ from QUANTTOOLS.Message.message_func.wechat import send_actionnotice
 from QUANTTOOLS.QAStockETL.QAFetch import (QA_fetch_financial_code_wy,QA_fetch_financial_code_ttm,
                                            QA_fetch_financial_code_tdx)
 from QUANTTOOLS.QAStockETL.QAFetch import QA_fetch_code_old,QA_fetch_get_stockcode_real,QA_fetch_stock_all,QA_fetch_code_new
+from QUANTTOOLS.QAStockETL import QA_fetch_stock_delist
 
 def check_ttm_financial(mark_day=None, type='day', ui_log = None):
     if type == 'day' and mark_day is None:
@@ -90,7 +91,8 @@ def check_stock_code():
     code_all = QA_fetch_stock_all()['code'].unique().tolist()
     code_old = QA_fetch_code_old()['code'].unique().tolist()
     code_new = QA_fetch_code_new()['code'].unique().tolist()
-    short_of_code = [i for i in code_all if i not in code_old + code_new]
+    stock_delist = QA_fetch_stock_delist()['code'].unique().tolist()
+    short_of_code = [i for i in code_all if i not in code_old + code_new + stock_delist]
 
     if len(short_of_code) > 0:
         QA_util_log_info('##JOB {} Short of Code: {}'.format(len(short_of_code), short_of_code))

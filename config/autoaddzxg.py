@@ -1,4 +1,4 @@
-from QUANTTOOLS.Message.message_func.email import send_email, reademail
+from QUANTTOOLS.Message.message_func.qaemail import send_email, reademail
 from QUANTTOOLS.Ananlysis.Tools.addtdxZXG import putzxgfile
 import pandas as pd
 from QUANTAXIS.QAUtil import QA_util_today_str,QA_util_get_last_day,QA_util_get_real_date,QA_util_if_trade,QA_util_get_pre_trade_date

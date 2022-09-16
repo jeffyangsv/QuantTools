@@ -1,6 +1,6 @@
 import logging
 import strategyease_sdk
-from QUANTTOOLS.Message.message_func.email import send_email
+from QUANTTOOLS.Message.message_func.qaemail import send_email
 from QUANTTOOLS.Message.message_func.wechat import send_actionnotice
 from  QUANTAXIS.QAUtil import QA_util_today_str,QA_util_if_trade
 

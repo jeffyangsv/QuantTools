@@ -18,8 +18,8 @@ from QUANTTOOLS.QAStockETL.QAFetch.QAQuery_Advance import (QA_fetch_stock_fianac
                                                            )
 from QUANTTOOLS.QAStockETL.QAUtil.QASQLStockAlpha191Half import QA_Sql_Stock_Alpha191Half
 from QUANTTOOLS.QAStockETL.QAUtil.QASQLStockAlpha101Half import QA_Sql_Stock_Alpha101Half
-from QUANTTOOLS.QAStockETL.QAFetch import QA_fetch_get_stock_half_realtime,QA_fetch_stock_alpha_real,QA_fetch_stock_alpha101_real
-from QUANTTOOLS.QAStockETL.Check.check_base import check_stock_data, check_index_data, check_stock_base
+from QUANTTOOLS.QAStockETL.QAFetch import QA_fetch_get_stock_half_realtime,QA_fetch_stock_alpha_real,QA_fetch_stock_alpha101_real,QA_fetch_get_stock_half_realtime_from_akshare
+from QUANTTOOLS.QAStockETL.Check.check_base import check_stock_data, check_index_data, check_stock_base,check_stock_akshare
 from  QUANTAXIS.QAUtil import (QA_util_get_real_date,
                                QA_util_get_last_day,
                                QA_util_if_trade
@@ -86,12 +86,29 @@ def QA_fetch_stock_day(code, start, end):
         start = QA_util_get_last_day(mark_day)
     return(QA_fetch_stock_day_adv(code, start, end).data)
 
+def QA_fetch_stock_day_oneday(code, start, end):
+    # mark_day = start
+    # if QA_util_if_trade(mark_day):
+    #     if QA_util_get_last_day(mark_day) == 'wrong date':
+    #         start = QA_util_get_real_date(mark_day)
+    #     else:
+    #         start = QA_util_get_last_day(mark_day)
+    # else:
+    #     mark_day = QA_util_get_real_date(mark_day)
+    #     start = QA_util_get_last_day(mark_day)
+    if QA_util_if_trade(start) and start == end:
+        return(QA_fetch_stock_day_adv(code, start, end).data)
+    else:
+        return None
+
 def check_stock_day(mark_day = None):
     return(check_stock_data(func = QA_fetch_stock_day, mark_day = mark_day, title = 'Stock Day'))
 
 def check_sinastock_day(mark_day = None):
     return(check_stock_base(func1 = QA_fetch_stock_day, func2 = QA_fetch_stock_half_realtime, mark_day = mark_day, title = 'Stock Day sina'))
 
+def check_akstock_day(mark_day = None):
+    return(check_stock_akshare(func1 = QA_fetch_stock_day_oneday, func2 = QA_fetch_get_stock_half_realtime_from_akshare, mark_day = mark_day, title = 'Stock Day akshare'))
 
 def check_stock_adj(mark_day = None):
     return(check_stock_data(func = QA_fetch_stock_adj, mark_day = mark_day, title = 'Stock Adj'))

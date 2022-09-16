@@ -407,5 +407,8 @@ def QA_SU_save_stock_vwap_his(code = None, start_date=None, end_date=None):
 def QA_SU_save_stock_info_tushare():
     ste.QA_SU_save_stock_info_tushare()
 
+def QA_SU_save_single_stock_day_from_akshare(code:str):
+    save_tdx.QA_SU_save_single_stock_day_from_akshare(code)
+
 if __name__ == '__main__':
     pass

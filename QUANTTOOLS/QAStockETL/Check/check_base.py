@@ -75,6 +75,79 @@ def check_stock_base(func1 = None, func2 = None, mark_day = None, title = None):
                [i for i in data2 if i not in data1],
                 [i for i in data2 if i not in list(data1) + list(new_code)]])
 
+def check_stock_akshare(func1 = None, func2 = None, mark_day = None, title = None):
+    code = list(QA_fetch_stock_all()['code'])
+    new_code = QA_fetch_code_new(1, mark_day).code.unique().tolist()
+
+    if mark_day is None:
+        mark_day = QA_util_today_str()
+
+    #check
+    try:
+        try:
+            data = func1(code, mark_day, mark_day)
+            data1 = data.reset_index().code.unique()
+        except:
+            data1 = data.code.unique()
+    #report
+    except:
+        data1 = None
+
+    try:
+        try:
+            data = func2()
+            data2 = data.reset_index().code.unique()
+            code_bj =  [i for i in data2 if i.startswith('78') == True] + [i for i in data2 if i.startswith('430') == True] + [i for i in data2 if i.startswith('8') == True]
+            data2 = [i for i in data2 if i not in code_bj]
+
+        except:
+            data2 = data.code.unique()
+    #report
+    except:
+        data2 = None
+
+    if data1 is None:
+        QA_util_log_info(
+            '##JOB Now Check {title} Failed ============== {deal_date} to {to_date} '.format(title = title,
+                                                                                             deal_date=func1.__name__,
+                                                                                             to_date=func2.__name__))
+        send_actionnotice('{title}检查错误报告'.format(title = title),
+                          '{title}数据缺失:{deal_date}'.format(title = title, deal_date=mark_day),
+                          'WARNING',
+                          direction = '{mark_day}, 数据量:{num}'.format(mark_day = func1.__name__, num = 0),
+                          offset='{to_date}, 数据量:{num}'.format(to_date = func2.__name__, num = 0),
+                          volume= '缺失全部数据')
+        return(None)
+    elif len(data1) < len(data2):
+        QA_util_log_info(
+            '##JOB Now Check {title} ============== {deal_date}: {num1} to {to_date}: {num2} '.format(title = title,
+                                                                                                      deal_date=func1.__name__,
+                                                                                                      num1=len(data1),
+                                                                                                      to_date=func2.__name__,
+                                                                                                      num2=len(data2)))
+        #send_email('错误报告', '数据检查错误,{title}数据'.format(title = title), mark_day)
+        send_actionnotice('{title}检查错误报告'.format(title = title),
+                          '{title}据缺失:{mark_day}'.format(title = title,mark_day = mark_day),
+                          'WARNING',
+                          direction = '{mark_day}, 数据量:{num}'.format(mark_day = func2.__name__, num = len(data1)),
+                          offset='{to_date}, 数据量:{num}'.format(to_date = func2.__name__, num = len(data2)),
+                          volume= '缺失数据量:{num}'.format(num =(len(data2) - len(data1))))
+
+        return([i for i in data1 if i not in data2],
+               [i for i in data2 if i not in data1],
+               [i for i in data2 if i not in list(data1) + list(new_code)])
+    else:
+        QA_util_log_info(
+            '##JOB Now Check {title} Success ============== {deal_date}: {num1} to {to_date}: {num2} '.format(title = title,
+                                                                                                              deal_date=func1.__name__,
+                                                                                                              num1=len(data1),
+                                                                                                              to_date=func2.__name__,
+                                                                                                              num2=len(data2)))
+
+        return([[i for i in data1 if i not in data2],
+               [i for i in data2 if i not in data1],
+                [i for i in data2 if i not in list(data1) + list(new_code)]])
+
 def check_stock_data(func = None, mark_day = None, title = None):
     code = list(QA_fetch_stock_all()['code'])
     new_code = QA_fetch_code_new(1, mark_day).code.unique().tolist()

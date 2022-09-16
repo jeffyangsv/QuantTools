@@ -33,8 +33,7 @@ from QUANTTOOLS.QAStockETL import (QA_SU_save_index_technical_index_day,
 from QUANTAXIS.QASU.main import (QA_SU_save_index_day,QA_SU_save_index_list)
 from QUANTTOOLS.QAStockETL.Check import (check_index_day)
 from QUANTTOOLS.QAStockETL.Check import (check_index_techindex, check_index_techweek)
-from QUANTTOOLS.QAStockETL import (QA_etl_index_technical_day,
-                                   QA_etl_index_technical_week)
+from QUANTTOOLS.QAStockETL import (QA_etl_index_technical_day,QA_etl_index_technical_week)
 from QUANTAXIS.QAUtil import QA_util_today_str,QA_util_if_trade
 from QUANTTOOLS.QAStockETL.QAUtil.QADate_trade import QA_util_get_real_date
 from datetime import datetime

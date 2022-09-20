@@ -929,7 +929,7 @@ def QA_fetch_stock_target(codes, start_date, end_date, type='day', close_type='c
     else:
         cols = ['datetime','code','PASS_MARK','TARGET','TARGET3','TARGET4','TARGET5','TARGET10','TARGET20']
 
-    data['up_rate'] = data.apply(lambda x : 0.2 if str(x[chan_col]) >= chan_date and str(x['code']).startswith('300') == True else 0.1,axis=1)
+    data['up_rate'] = data.apply(lambda x : 0.2 if str(x[chan_col]) >= chan_date and str(x['code']).startswith('30') == True else 0.1,axis=1)
 
     if method == 'value':
         res = data.groupby('code').apply(func1, type=close_type)[cols]

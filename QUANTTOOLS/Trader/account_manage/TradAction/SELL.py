@@ -48,7 +48,7 @@ def SELL(client, account, strategy_id, account_info, trading_date,
             QA_util_log_info('Test Mode', ui_log=None)
 
     elif type == 'MARKET':
-        if str(code).startswith('300') is True:
+        if str(code).startswith('30') is True:
             low_value = 0.1995
         else:
             low_value = 0.0995

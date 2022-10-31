@@ -5,11 +5,13 @@ from QUANTTOOLS.QAStockETL.QAUtil.QADate_trade import QA_util_get_real_date,QA_u
 from QUANTAXIS.QAUtil import (QA_util_log_info)
 import pandas as pd
 
-def load_data(model, start_date, end_date, type ='model', norm_type=None, sub_block=False, ST=False, ui_log=None):
+def load_data(model, start_date, end_date, type ='model', norm_type=None, sub_block=False, ST=False, ui_log=None, code=None):
     QA_util_log_info('##JOB01 Now Model Init ==== {}'.format(str(end_date)), ui_log)
 
     QA_util_log_info('##JOB02 Now Stock Prepare Model Data ==== {}'.format(str(end_date)), ui_log)
-    model.get_data(start=QA_util_get_last_day(QA_util_get_real_date(start_date), 30), end= end_date, type =type,sub_block=sub_block, norm_type=norm_type, ST=ST)
+    model.get_data(start=QA_util_get_last_day(QA_util_get_real_date(start_date), 30), end= end_date,
+                   type =type,sub_block=sub_block, norm_type=norm_type,
+                   ST=ST, code=code)
     return(model)
 
 def shuffle(model, cols = None, n_in = None):
@@ -24,8 +26,8 @@ def set_target(model, start_date, end_date, mark = 0.3, col = 'TARGET5', type = 
                         train_end=end_date)
     return(model)
 
-def prepare_data(model, cols, thresh=0, drop=0.99):
-    model.prepare_data(thresh=thresh, drop=drop, cols = cols)
+def prepare_data(model, cols, thresh=0, drop=0.99,n_in=None):
+    model.prepare_data(thresh=thresh, drop=drop, cols = cols,n_in=n_in)
     return(model)
 
 def norm_data(model, type = 'normal', ui_log = None ):

@@ -1,27 +1,36 @@
 from QUANTTOOLS.Market.MarketTools.TimeTools.time_control import time_check_before,time_check_after
-from QUANTTOOLS.QAStockETL.QAFetch.QAQuantFactor import QA_fetch_get_stock_vwap_min, QA_fetch_get_stock_quant_min
-from QUANTTOOLS.QAStockETL.QAFetch.QATdx import QA_fetch_get_stock_realtime
+from QUANTTOOLS.QAStockETL.QAFetch import QA_fetch_get_stock_vwap
 from QUANTTOOLS.Model.FactorTools.QuantMk import get_quant_data_30min,get_quant_data_15min
 from QUANTAXIS.QAUtil import QA_util_get_pre_trade_date
 from QUANTAXIS.QAUtil import QA_util_log_info
 from QUANTTOOLS.QAStockETL.QAFetch import QA_fetch_stock_name,QA_fetch_stock_industryinfo
 import time
 import numpy as np
+from QUANTTOOLS.Model.StockModel.StrategyXgboostMin import QAStockXGBoostMin
 
-def data_collect(code_list,trading_date,data_15min,k_per=1.03):
+def data_collect(code_list,trading_date,data_15min):
     try:
 
-        source_data = QA_fetch_get_stock_vwap_min(code_list, QA_util_get_pre_trade_date(trading_date,10), trading_date, type='1')
-        close = source_data.reset_index().groupby(['date','code'])['close'].agg({'last'}).groupby('code').shift().rename(columns={'last':'yes_close'})
-        price = QA_fetch_get_stock_realtime(code_list)[['涨停价','跌停价','涨跌(%)']].rename(
-            {'涨停价':'up_price','跌停价':'down_price','涨跌(%)':'pct'}, axis='columns')
-        price = price.assign(pct=price.pct/100)
+        source_data = QA_fetch_get_stock_vwap(code_list, QA_util_get_pre_trade_date(trading_date,10), trading_date, type='real')
+        last = source_data.groupby(['date','code'])['close'].agg([('last1','last')])
+        last = last.assign(yes_close=last.groupby('code').shift())
         data = source_data \
-            .reset_index().set_index(['date','code']).join(close) \
-            .reset_index().set_index(['code']).join(price) \
-            .reset_index().set_index(['datetime','code']).join(data_15min[['RRNG_15M','MA60_C_15M','MIN_V_15M','MAX_V_15M','SIGN_30M','MA60_C_30M','RRNG_30M', 'MAX_V_30M', 'MIN_V_30M']])
-        data[['RRNG_15M','MA60_C_15M','MIN_V_15M','MAX_V_15M','SIGN_30M','MA60_C_30M','RRNG_30M', 'MAX_V_30M', 'MIN_V_30M']] = data.groupby('code')[['RRNG_15M','MA60_C_15M','MIN_V_15M','MAX_V_15M','SIGN_30M','MA60_C_30M','RRNG_30M', 'MAX_V_30M', 'MIN_V_30M']].fillna(method='ffill')
+            .reset_index().set_index(['date','code']).join(last) \
+            .reset_index().set_index(['datetime','code']).join(data_15min)
+        data = data.assign(TARGET = data.day_close/data.last1-1,
+                           pct= data.day_close/data.yes_close-1)
+        data = data.groupby('code').fillna(method='ffill')
 
+        stock_model = QAStockXGBoostMin()
+        stock_model = stock_model.load_model('stock_in')
+        stock_model.set_data(data)
+        stock_model.base_predict()
+        data[['IN_SIG','IN_PROB']] = stock_model.data[['y_pred','O_PROB']]
+
+        stock_model = stock_model.load_model('stock_out')
+        stock_model.set_data(data)
+        stock_model.base_predict()
+        data[['OUT_SIG','OUT_PROB']] = stock_model.data[['y_pred','O_PROB']]
         # 方案1
         # hold index&condition
         #下降通道 超降通道 上升通道 超升通道
@@ -36,46 +45,16 @@ def data_collect(code_list,trading_date,data_15min,k_per=1.03):
                            msg = None,
                            code = [str(i) for i in data.reset_index().code])
         #顶部死叉
-        data.loc[(data.VAMP_SC == 1) & (data.VAMP_K < 0.02) & (data.CLOSE_K < 0) & (data.SIGN_30M <= -2),
-                 "signal"] = 0
-        data.loc[(data.VAMP_SC == 1) & (data.VAMP_K < 0.02) & (data.CLOSE_K < 0) & (data.SIGN_30M <= -2),
-                 "msg"] = 'VMAP死叉'
-
-        #顶部下降通道
-        data.loc[(data.VAMP_K <= -0.2) & (data.CLOSE_K < 0) & (data.SIGN_30M <= -2), "signal"] = 0
-        data.loc[(data.VAMP_K <= -0.2) & (data.CLOSE_K < 0) & (data.SIGN_30M <= -2), "msg"] = '止损:VMAP下降通道'
-
-        #超涨&顶部滞涨
-        data.loc[(data.DISTANCE > 0.05) & (data.CLOSE_K < 0) & (data.VAMP_K < 0.03) & (data.SIGN_30M <= -2),
-                 "signal"] = 0
-        data.loc[(data.DISTANCE > 0.05) & (data.CLOSE_K < 0) & (data.VAMP_K < 0.03) & (data.SIGN_30M <= -2),
-                 "msg"] = 'VMAP超涨'
+        data.loc[(data.OUT_SIG == 1)&(data.IN_SIG == 0),"signal"] = 0
+        data.loc[(data.OUT_SIG == 1)&(data.IN_SIG == 0),"msg"] = 'model出场信号'
 
         # 强制止损
-        data.loc[(data.pct_chg <= -5) & (data.CLOSE_K < 0) & (data.VAMP_K < 0.01), "signal"] = 0
-        data.loc[(data.pct_chg <= -5) & (data.CLOSE_K < 0) & (data.VAMP_K < 0.01), "msg"] = '强制止损'
-
-        #底部金叉
-        data.loc[(data.RRNG_15M.abs() < 0.03)&(data.VAMP_JC == 1) & (data.VAMPC_K >= 0.01)  & (data.CLOSE_K > 0) & (data.VAMP_K >= 0) & (data.MIN_V_15M * k_per > data.close),
-                 "signal"] = 1
-        data.loc[(data.RRNG_15M.abs() < 0.03)&(data.VAMP_JC == 1) & (data.VAMPC_K >= 0.01)  & (data.CLOSE_K > 0) & (data.VAMP_K >= 0) & (data.MIN_V_15M * k_per > data.close),
-                 "msg"] = 'VMAP金叉'
+        #data.loc[(data.pct_chg <= -5) & (data.CLOSE_K < 0) & (data.VAMP_K < 0.01), "signal"] = 0
+        #data.loc[(data.pct_chg <= -5) & (data.CLOSE_K < 0) & (data.VAMP_K < 0.01), "msg"] = '强制止损'
 
         #放量金叉
-        data.loc[(data.VAMP_JC == 1) & (data.CLOSE_K > 0.1) & (data.VAMPC_K >= 0.1) & (data.VAMP_K > 0) & (data.camt_vol > 1),
-                 "signal"] = 1
-        data.loc[(data.VAMP_JC == 1) & (data.CLOSE_K > 0.1) & (data.VAMPC_K >= 0.1) & (data.VAMP_K > 0) & (data.camt_vol > 1),
-                 "msg"] = 'VMAP放量金叉'
-
-        #超跌
-        data.loc[(data.DISTANCE < -0.03) & (data.VAMP_K > -0.03) & (data.CLOSE_K > 0) & (data.MIN_V_15M * k_per > data.close) & (data.camt_vol < 0.4),
-                 "signal"] = 1
-        data.loc[(data.DISTANCE < -0.03) & (data.VAMP_K > -0.03) & (data.CLOSE_K > 0) & (data.MIN_V_15M * k_per > data.close) & (data.camt_vol < 0.4),
-                 "msg"] = 'VMAP超跌'
-
-        #底部追涨
-        data.loc[(data.VAMPC_K >= 0.2) & (data.VAMP_K > 0.2) & (data.MIN_V_15M * k_per > data.close) & (data.DISTANCE < 0.02) & (data.camt_vol > 0.8), "signal"] = 1
-        data.loc[(data.VAMPC_K >= 0.2) & (data.VAMP_K > 0.2) & (data.MIN_V_15M * k_per > data.close) & (data.DISTANCE < 0.02) & (data.camt_vol > 0.8), "msg"] = '追涨:VMAP上升通道'
+        data.loc[(data.IN_SIG == 1)&(data.OUT_SIG == 0), "signal"] = 1
+        data.loc[(data.IN_SIG == 1)&(data.OUT_SIG == 0), "msg"] = 'model进场信号'
 
         return(data)
     except:
@@ -147,7 +126,7 @@ def signal(target_list, buy_list, position, tmp_data, trading_date, mark_tm):
 
     stm = trading_date + ' ' + mark_tm
     try:
-        data = data_collect(code_list, trading_date, tmp_data, k_per=1.03)
+        data = data_collect(code_list, trading_date, tmp_data)
     except:
         QA_util_log_info('##JOB Signal Failed ====================', ui_log=None)
         data = None
@@ -174,11 +153,11 @@ def signal(target_list, buy_list, position, tmp_data, trading_date, mark_tm):
         QA_util_log_info(data[['RRNG_15M','VAMP_JC','CLOSE_K','VAMPC_K','VAMP_K','DISTANCE','close','MIN_V_15M','camt_vol','signal','msg']], ui_log=None)
         QA_util_log_info('##Buy DataFrame ====================', ui_log=None)
         QA_util_log_info(data[data.signal == 1][['SIGN_30M','RRNG_30M','VAMP_JC','VAMP_SC','VAMP_K','CLOSE_K','VAMPC_K','DISTANCE',
-                                                 'close','MIN_V_30M','MAX_V_30M','up_price','signal','msg']], ui_log=None)
+                                                 'close','MIN_V_30M','MAX_V_30M','signal','msg']], ui_log=None)
 
         QA_util_log_info('##Sell DataFrame ====================', ui_log=None)
         QA_util_log_info(data[data.signal == 0][['SIGN_30M','RRNG_30M','VAMP_JC','VAMP_SC','VAMP_K','CLOSE_K','VAMPC_K','DISTANCE',
-                                                 'close','MIN_V_30M','MAX_V_30M','up_price','signal','msg']], ui_log=None)
+                                                 'close','MIN_V_30M','MAX_V_30M','signal','msg']], ui_log=None)
 
         # 方案2
         #data['signal'] = None
@@ -257,7 +236,7 @@ def tracking_signal(buy_list, position, trading_date, mark_tm):
 
     # 定时执行部分
     stm = trading_date + ' ' + mark_tm
-    source_data = QA_fetch_get_stock_vwap_min(QA_util_get_pre_trade_date(trading_date,10), trading_date, code_list, type='1')
+    source_data = QA_fetch_get_stock_vwap(QA_util_get_pre_trade_date(trading_date,10), trading_date, code_list, type='1')
     data = source_data.loc[(stm,)]
     # add information
     # add name industry

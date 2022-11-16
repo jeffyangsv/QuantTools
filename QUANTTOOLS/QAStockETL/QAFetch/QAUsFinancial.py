@@ -3,6 +3,10 @@ from akshare import stock_zh_a_minute,stock_zh_a_hist_min_em
 from QUANTAXIS.QAUtil import QA_util_date_stamp
 import datetime
 import pandas as pd
+from QUANTTOOLS.QAStockETL.FuncTools.TransForm import trans_code
+import multiprocessing
+from functools import partial
+import random
 
 def QA_fetch_get_stock_report_xq(code):
     data = read_financial_report(code)
@@ -53,41 +57,38 @@ def QA_fetch_get_usstock_report_xq(code):
     return(data)
 
 def QA_fetch_get_usstock_day_xq(code, start_date, end_date, period='day', type='normal'):
-    if code[0:2] == '60' and len(code) == 6:
-        code1 = 'SH'+code
-    elif code[0:3] == '688':
-        code1 = 'SH'+code
-    elif code[0:3] in ['000','002','300'] and len(code) == 6:
-        code1 = 'SZ'+code
+    if isinstance(code, list):
+        code1 = [trans_code(i) for i in code]
     else:
-        code1 = code
+        code1 = [trans_code(code)]
     data = read_stock_day(code1, start_date, end_date, period, type)
     data = data.assign(date_stamp=data['date'].apply(lambda x: QA_util_date_stamp(str(x)[0:10])))
     data = data.assign(code=code)
     return(data)
 
-def proxy_stock_zh_a_hist_min_em(symbol,period,adjust):
-    res = stock_zh_a_hist_min_em(symbol=symbol, period=period, adjust=adjust)
-    res = res.assign(code=symbol)
-    return(res)
+def proxy_stock_zh_a_hist_min_em(symbol_proxies, period, adjust):
+    try:
+        res = stock_zh_a_hist_min_em(symbol=symbol_proxies[1], period=period, adjust=adjust, proxies=symbol_proxies[0])
+        res = res.assign(code=symbol_proxies[1])
+        return(res)
+    except:
+        return(None)
 
-def QA_fetch_get_stock_min_sina(code, period='30', type=''):
-    #if code[0:2] == '60' and len(code) == 6:
-    #    code1 = 'SH'+code
-    #elif code[0:3] == '688':
-    #    code1 = 'SH'+code
-    #elif code[0:3] in ['000','002','300'] and len(code) == 6:
-    #    code1 = 'SZ'+code
-    #else:
-    #    code1 = code
+def QA_fetch_get_stock_min_sina(code, period='30', type='',proxies=[]):
+
     if isinstance(code,list):
-        data = pd.concat([proxy_stock_zh_a_hist_min_em(symbol=i, period=period, adjust=type) for i in code])
-
-    elif isinstance(code,str):
+        if isinstance(proxies,list):
+            symbol_proxies = list(zip(random.choices(proxies, k=len(code)),code))
+        else:
+            symbol_proxies = list(zip(random.choices([proxies], k=len(code)),code))
+        pool = multiprocessing.Pool(15)
+        with pool as p:
+            res = p.map(partial(proxy_stock_zh_a_hist_min_em, period=period, adjust=type), symbol_proxies)
+        data = pd.concat(res,axis=0)
+    elif isinstance(code, str):
         data = stock_zh_a_hist_min_em(symbol=code, period=period, adjust=type)
     else:
         data=None
-
     try:
         data = data.rename(columns={'时间':'datetime',
                                     '开盘':'open',
@@ -97,14 +98,15 @@ def QA_fetch_get_stock_min_sina(code, period='30', type=''):
                                     '成交量':'volume',
                                     '成交额':'amount',
                                     '最新价':'price',})
-        data[['open','close','high','low','volume','amount']] = data[['open','close','high','low','volume','amount']].apply(pd.to_numeric)
+        data[['open','close','high','low','volume','amount','price']] = data[['open','close','high','low','volume','amount','price']].apply(pd.to_numeric)
+        #data = data.assign(pct=data.pct/100)
         data = data.assign(date_stamp=data['datetime'].apply(lambda x: QA_util_date_stamp(str(x)[0:10])))
         data['datetime']=pd.to_datetime(data['datetime'],format='%Y-%m-%d %H:%M:%S')
     except:
         data = None
 
     try:
-        data[['price']] = data[['price']].apply(pd.to_numeric)
+        data[['pct_chg']] = data[['pct_chg']].apply(pd.to_numeric)
     except:
         pass
     return(data)

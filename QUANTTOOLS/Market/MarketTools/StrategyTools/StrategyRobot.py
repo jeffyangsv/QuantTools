@@ -106,6 +106,8 @@ class StrategyRobotBase:
         self.strategy = prepare_strategy(self.strategy, {'position': positions,
                                                          'sub_account': sub_accounts,
                                                          })
+        self.strategy.set_code_check()
+        self.strategy.init_run()
 
         # first time check before 15
         while time_check_before('15:00:00', test=test):
@@ -172,6 +174,13 @@ class StrategyRobotBase:
                 if mark_tm <= self.time_list[(self.time_list.index(mark_tm)+1) % len(self.time_list)]:
                     mark_tm = self.time_list[(self.time_list.index(mark_tm)+1) % len(self.time_list)]
                     QA_util_log_info('##下一交易时段 ==================== {}'.format(mark_tm), ui_log=None)
+
+                    tm = datetime.datetime.now().strftime("%H:%M:%S")
+                    QA_util_log_info(self.time_list[(self.time_list.index(mark_tm)+2) % len(self.time_list)])
+                    if tm > self.time_list[(self.time_list.index(mark_tm)+2) % len(self.time_list)]:
+                        mark_tm = get_on_time(tm, self.time_list)
+                        QA_util_log_info('##已超时 跳入下一交易时段 ==================== {}'.format(mark_tm), ui_log=None)
+
                 else:
                     QA_util_log_info('##JOB 已过交易时间 ==================== {}'.format(mark_tm), ui_log=None)
                     break

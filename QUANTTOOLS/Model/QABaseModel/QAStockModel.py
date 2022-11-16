@@ -2,13 +2,14 @@ import pandas as pd
 from QUANTTOOLS.Model.FactorTools.QuantMk import get_quant_data_realtime,get_quant_data_train,get_quant_data,get_index_quant_data
 from QUANTAXIS.QAUtil import (QA_util_log_info)
 from QUANTTOOLS.Model.QABaseModel.QAModel import QAModel
-from QUANTAXIS.QAUtil import QA_util_if_trade,QA_util_get_pre_trade_date,QA_util_get_real_date,QA_util_get_trade_range
+from QUANTAXIS.QAUtil import QA_util_get_last_day,QA_util_get_pre_trade_date,QA_util_get_real_date,QA_util_get_trade_range
 
 class QAStockModel(QAModel):
 
-    def get_data(self, start, end, code=None, block=False, sub_block=False, type ='model', norm_type='normalization', ST=True,method='value'):
+    def get_data(self, start, end, code=None, block=False, sub_block=False, type ='model', norm_type='normalization', ST=True, method='value'):
+        start = QA_util_get_last_day(QA_util_get_real_date(start), 30)
         QA_util_log_info('##JOB Got Data by {type}, block: {block}, sub_block: {sub_block}, ST: {ST} ==== from {_from} to {_to}'.format(type=type, block=block,sub_block=sub_block, ST=ST, _from=start, _to=end), ui_log = None)
-        self.data = get_quant_data(start, end, code=code, type = type, block = block, sub_block = sub_block, norm_type=norm_type, ST=ST,method=method)
+        self.data = get_quant_data(start, end, code=code, type = type, block = block, sub_block = sub_block, norm_type=norm_type, ST=ST, method=method)
         self.info['code'] = code
         self.info['norm_type'] = norm_type
         self.info['block'] = block
@@ -26,8 +27,8 @@ class QAStockModel(QAModel):
             start_date = QA_util_get_pre_trade_date(start, max(self.n_in)+1)
         else:
             start_date = start
-        self.data = get_quant_data(start_date, end, code = self.code, type= type,block = self.block, sub_block=self.sub_block, ST=ST, norm_type=self.norm_type)
 
+        self.get_data(start_date, end, code = self.code, type= type,block = self.block, sub_block=self.sub_block,ST=ST, norm_type=self.norm_type)
         index_target = get_index_quant_data(start, end,code=['000001','399006'],type='crawl', norm_type=None)
         index_feature = pd.pivot(index_target.loc[(slice(None),['000001','399006']),['SKDJ_K','SKDJ_TR','SKDJ_K_WK','SKDJ_TR_WK']].reset_index(),index='date',columns='code',values=['SKDJ_K','SKDJ_TR','SKDJ_K_WK','SKDJ_TR_WK'])
         index_feature.columns= ['SKDJ_K1','SKDJ_K6','SKDJ_TR1','SKDJ_TR6','SKDJ_K_WK1','SKDJ_K_WK6','SKDJ_TR_WK1','SKDJ_TR_WK6']

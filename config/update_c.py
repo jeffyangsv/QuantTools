@@ -130,7 +130,7 @@ if __name__ == '__main__':
         while res is None or len(res[1]) > 360:
             QA_SU_save_stock_fianacial_momgo(mark_day,mark_day)    #由oracle的stock_analysis_data 生成mongo 的表 stock_financial_analysis
             res = check_stock_fianacial(mark_day)
-        #
+
         res = check_stock_finper(mark_day)
         while res is None or len(res[1]) > 360:
             QA_SU_save_stock_fianacial_percent_day(start_date = mark_day, end_date = mark_day)   #根据 mongo 表 stock_financial_analysis 生成 mongo 表 stock_financial_percent
@@ -140,9 +140,3 @@ if __name__ == '__main__':
         QA_etl_stock_financial_percent_day(mark_day, mark_day)                   #根据 mongo 表 stock_financial_percent 生成  oracle 表 stock_quant_financial_percent
 
         QA_SU_save_stock_info()
-
-        #无效，... from stock_financial_analysis': ORA-00904: "CASHOFNETPROFIT_TTM_LQ": invalid identifier
-        # res = check_ttm_financial(mark_day)
-        # if res is None or res > 20:
-        #     QA_SU_save_fianacialTTM_momgo()   #oracle stock_financial_analysis 转存mongo financial_TTM
-        #     check_ttm_financial(mark_day)

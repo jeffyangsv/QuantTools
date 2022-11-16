@@ -51,7 +51,7 @@ class QAModel():
         self.TR_RNG = QA_util_get_trade_range(train_start, train_end)
         self.info['train_rng'] = [train_start,train_end]
 
-    def prepare_data(self, thresh = None, drop = 0, cols = None, n_in= None):
+    def prepare_data(self, thresh = None, drop = 0, cols = None, n_in= None,train_type=True):
 
         self.thresh = thresh
         self.drop = drop
@@ -61,7 +61,8 @@ class QAModel():
         if cols is None:
             self.cols = [i for i in self.data.columns if i not in
                          ['moon','star','mars','venus','sun','MARK','date','datetime',
-                          'OPEN_MARK','PASS_MARK','TARGET','TARGET3','DATE_STAMP_15M', 'DATE_STAMP_30M',
+                          'OPEN_MARK','PASS_MARK','TARGET','TARGET3',
+                          'DATE_STAMP_15M', 'DATE_STAMP_30M','TIME_STAMP_15M','TIME_STAMP_30M',
                           'TARGET4','TARGET5','TARGET10','TARGET20','AVG_TARGET','INDEX_TARGET',
                           'INDUSTRY','INDEX_TARGET3','INDEX_TARGET4','INDEX_TARGET5',
                           'INDEX_TARGET10','INDEX_TARGET20','date_stamp','PRE_DATE','next_date']]
@@ -75,8 +76,7 @@ class QAModel():
         QA_util_log_info('##JOB Drop Columns with low {} fill rate {} ===== {}'.format(drop, non_cols, self.info['date']), ui_log = None)
         self.cols = [i for i in self.cols if i not in std_cols + non_cols]
 
-        loss_rate = self.thresh_check(train_type=True)
-
+        loss_rate = self.thresh_check(train_type=train_type)
         QA_util_log_info('##JOB Split Train Data ===== {}'.format(self.info['date']), ui_log = None)
 
         if 'date' in list(self.data.columns):
@@ -190,23 +190,42 @@ class QAModel():
         loss_rate = nan_num/self.data.shape[0]
         QA_util_log_info('##JOB Clean Data With {per} ({NAN_NUM}/{shape})  Contain NAN ==== '.format(
             NAN_NUM=nan_num, per = loss_rate, shape=self.data.shape[0]), ui_log = None)
-        if train_type == True:
-            if self.thresh is None:
-                self.train_data = self.data[self.cols + ['star']]
-            elif self.thresh == 0:
-                self.train_data = self.data[self.cols + ['star']].dropna().join(
-                    self.data[[i for i in list(self.data.columns) if i not in self.cols + ['star']]])
-            else:
-                self.train_data = self.data[self.cols + ['star']].dropna(thresh=(len(self.cols) - self.thresh)).join(
-                    self.data[[i for i in list(self.data.columns) if i not in self.cols + ['star']]])
+        b_num = self.data.shape[0]
+
+        if 'date' in list(self.data.columns):
+            add_cols = ['star','date']
         else:
+            add_cols = ['star']
+
+        if train_type is True:
+            QA_util_log_info('##JOB Thresh Clean Data With Train Type ==== ', ui_log = None)
+
+            if self.thresh is None:
+                self.train_data = self.data[self.cols + add_cols]
+            elif self.thresh == 0:
+                self.train_data = self.data[self.cols + add_cols].dropna().join(
+                    self.data[[i for i in list(self.data.columns) if i not in self.cols + ['star']]])
+
+                QA_util_log_info('##JOB Delete Data With {per} ({NAN_NUM}/{shape})  Contain NAN ==== '.format(
+                    NAN_NUM=b_num - self.train_data.shape[0], per = 1-self.train_data.shape[0]/b_num, shape=b_num), ui_log = None)
+            else:
+                self.train_data = self.data[self.cols + add_cols].dropna(thresh=(len(self.cols) - self.thresh)).join(
+                    self.data[[i for i in list(self.data.columns) if i not in self.cols + ['star']]])
+                QA_util_log_info('##JOB Delete Data With {per} ({NAN_NUM}/{shape})  Contain NAN ==== '.format(
+                    NAN_NUM=b_num - self.train_data.shape[0], per = 1-self.train_data.shape[0]/b_num, shape=b_num), ui_log = None)
+        else:
+            QA_util_log_info('##JOB Thresh Clean Data No Train Type ==== ', ui_log = None)
             if self.thresh is None:
                 pass
             elif self.thresh == 0:
                 self.data = self.data[self.cols + ['star']].dropna().join(
                     self.data[[i for i in list(self.data.columns) if i not in self.cols + ['star']]])
+                QA_util_log_info('##JOB Delete Data With {per} ({NAN_NUM}/{shape})  Contain NAN ==== '.format(
+                    NAN_NUM=b_num - self.data.shape[0], per = 1-self.data.shape[0]/b_num, shape=b_num), ui_log = None)
             else:
                 self.data = self.data.dropna(subset=self.cols,thresh=(len(self.cols) - self.thresh))
+                QA_util_log_info('##JOB Delete Data With {per} ({NAN_NUM}/{shape})  Contain NAN ==== '.format(
+                    NAN_NUM=b_num - self.data.shape[0], per = 1-self.data.shape[0]/b_num, shape=b_num), ui_log = None)
 
         send_email('模型训练报告', "数据损失比例 {}".format(loss_rate), self.info['date'])
         if loss_rate >= 0.01:

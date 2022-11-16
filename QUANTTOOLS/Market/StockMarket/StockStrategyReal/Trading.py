@@ -5,7 +5,7 @@ from QUANTTOOLS.Model.FactorTools.QuantMk import get_index_quant_data,get_quant_
 from QUANTTOOLS.Market.MarketTools import load_data, StrategyRobotBase, StrategyBase, on_bar
 from QUANTAXIS.QAUtil import QA_util_get_last_day,QA_util_get_real_date, QA_util_get_pre_trade_date
 #from .StrategyOne import signal, balance, tracking_signal, track_balance, code_select
-from .StrategySec import signal, balance, tracking_signal, track_balance, code_select
+from .StrategySec import signal, balance, tracking_signal, track_balance, code_select, day_init
 
 
 def trading_sim(trading_date, working_dir=working_dir):
@@ -44,6 +44,7 @@ def trading_sim(trading_date, working_dir=working_dir):
     time_index = on_bar('09:30:00', '15:00:00', 15, [['11:30:00', '13:00:00']])
 
     strategy = StrategyBase(target_list=code_list, base_percent=1, trading_date=trading_date)
+    strategy.set_init_func(day_init)
     strategy.set_codsel_func(code_select, time_index)
     strategy.set_signal_func(signal, time_list)
     strategy.set_balance_func(balance)
@@ -58,17 +59,23 @@ def trading_sim(trading_date, working_dir=working_dir):
 
 def trading_new(trading_date, working_dir=working_dir):
     r_tar, xg_sh, prediction = load_data(concat_predict, QA_util_get_pre_trade_date(trading_date,1), working_dir, 'stock_sh', 'prediction_sh')
-
-    xg_sh=xg_sh.loc[QA_util_get_pre_trade_date(trading_date,1)]
+    r_tar, xg, prediction = load_data(concat_predict, QA_util_get_pre_trade_date(trading_date,1), working_dir, 'stock_xg', 'prediction')
+    r_tar, xg_nn, prediction = load_data(concat_predict_neut, QA_util_get_pre_trade_date(trading_date,1), working_dir, 'stock_xg_nn', 'prediction_stock_xg_nn')
+    r_tar, mars_nn, prediction = load_data(concat_predict_neut, QA_util_get_pre_trade_date(trading_date,1), working_dir, 'stock_mars_nn', 'prediction_stock_mars_nn')
+    r_tar, mars_day, prediction = load_data(concat_predict, QA_util_get_pre_trade_date(trading_date,1), working_dir, 'stock_mars_day', 'prediction_stock_mars_day')
 
     xg_sh=xg_sh[(xg_sh.RANK<=20)&(xg_sh.O_PROB>=0.4)]
 
-    code_list = list(set(xg_sh[(xg_sh.RANK <= 20)&(xg_sh.TARGET5.isnull())].reset_index().code.tolist()))
-
+    code_list = list(set(xg_sh[(xg_sh.RANK <= 20)&(xg_sh.TARGET5.isnull())].reset_index().code.tolist()
+                         + xg[(xg.RANK <= 5)&(~xg.INDUSTRY.isin(['银行']))&(xg.y_pred==1)&(xg.TARGET3.isnull())].reset_index().code.tolist()
+                         + xg_nn[(xg_nn.RANK <= 5)&(~xg_nn.INDUSTRY.isin(['银行']))&(xg_nn.y_pred==1)&(xg_nn.TARGET3.isnull())].reset_index().code.tolist()
+                         + mars_nn[(mars_nn.RANK <= 5)&(~mars_nn.INDUSTRY.isin(['银行']))&(mars_nn.y_pred==1)&(mars_nn.TARGET3.isnull())].reset_index().code.tolist()
+                         + mars_day[(mars_day.RANK <= 5)&(~mars_day.INDUSTRY.isin(['银行']))&(mars_day.y_pred==1)&(mars_day.TARGET3.isnull())].reset_index().code.tolist()))
     time_list = on_bar('09:30:00', '15:00:00', 1, [['11:30:00', '13:00:00']])
     time_index = on_bar('09:30:00', '15:00:00', 15, [['11:30:00', '13:00:00']])
 
     strategy = StrategyBase(target_list=code_list, base_percent=1, trading_date=trading_date)
+    strategy.set_init_func(day_init)
     strategy.set_codsel_func(code_select, time_index)
     strategy.set_signal_func(signal, time_list)
     strategy.set_balance_func(balance)

@@ -4,7 +4,7 @@ from QUANTTOOLS.Model.StockModel.StrategyXgboostNeut import QAStockXGBoostNeut
 from QUANTTOOLS.Model.StockModel.StrategyXgboost import QAStockXGBoost
 from QUANTTOOLS.Model.IndexModel.IndexXGboost import QAIndexXGBoost
 from QUANTTOOLS.Market.StockMarket.StockStrategyReal.setting import working_dir, exceptions, trading_setting, \
-    stock_day_set, index_day_set, stock_xg_set, index_xg_set, stock_day_nn, stock_xg_nn, block_set, data_set
+    stock_day_set, index_day_set, stock_xg_set, index_xg_set, stock_day_nn, stock_xg_nn, block_set, data_set, in_set, out_set
 from QUANTTOOLS.Market.MarketTools.TrainTools import start_train, save_report, load_data, prepare_data, set_target, shuffle
 from QUANTTOOLS.QAStockETL.QAUtil.QADate_trade import QA_util_get_real_date,QA_util_get_last_day,QA_util_get_pre_trade_date
 from QUANTTOOLS.Market.StockMarket.StockStrategyReal.running import watch_func1, watch_func
@@ -58,7 +58,7 @@ def daymodel_train(date, working_dir=working_dir):
 
     stock_model = set_target(stock_model, start_date, QA_util_get_last_day(QA_util_get_real_date(date), 6), mark = 0.3, col = 'TARGET5', type='percent')
 
-    stock_model = prepare_data(stock_model, stock_xg_nn, 0, 0.95)
+    stock_model = prepare_data(stock_model, stock_xg_nn, 0, 0.95, train_type=True)
     other_params = {'learning_rate': 0.1, 'n_estimators': 200, 'max_depth': 5, 'min_child_weight': 1, 'seed': 1,
                     'subsample': 0.8, 'colsample_bytree': 0.8, 'gamma': 0, 'reg_alpha': 0, 'reg_lambda': 1}
 
@@ -69,7 +69,7 @@ def daymodel_train(date, working_dir=working_dir):
     stock_model = set_target(stock_model, start_date, QA_util_get_last_day(QA_util_get_real_date(date), 6), mark = 0.3, col = 'TARGET', type='percent')
 
 
-    stock_model = prepare_data(stock_model, stock_day_nn, None, 0.01)
+    stock_model = prepare_data(stock_model, stock_day_nn, None, 0.95, train_type=True)
     other_params = {'learning_rate': 0.1, 'n_estimators': 200, 'max_depth': 5, 'min_child_weight': 1, 'seed': 1,
                     'subsample': 0.8, 'colsample_bytree': 0.8, 'gamma': 0, 'reg_alpha': 0, 'reg_lambda': 1}
 
@@ -84,7 +84,7 @@ def daymodel_train(date, working_dir=working_dir):
 
     stock_model.data = stock_model.data[stock_model.data.OPEN_MARK == 0]
 
-    stock_model = prepare_data(stock_model, stock_xg_set, None, 0.01)
+    stock_model = prepare_data(stock_model, stock_xg_set, None, 0.95, train_type=True)
     other_params = {'learning_rate': 0.1, 'n_estimators': 200, 'max_depth': 5, 'min_child_weight': 1, 'seed': 1,
                     'subsample': 0.8, 'colsample_bytree': 0.8, 'gamma': 0, 'reg_alpha': 0, 'reg_lambda': 1}
 
@@ -93,7 +93,7 @@ def daymodel_train(date, working_dir=working_dir):
 
     stock_model = set_target(stock_model, start_date, QA_util_get_last_day(QA_util_get_real_date(date), 6), mark = 0.3, col = 'TARGET', type='percent')
 
-    stock_model = prepare_data(stock_model, stock_day_set, None, 0.01)
+    stock_model = prepare_data(stock_model, stock_day_set, None, 0.95, train_type=True)
     other_params = {'learning_rate': 0.1, 'n_estimators': 200, 'max_depth': 5, 'min_child_weight': 1, 'seed': 1,
                     'subsample': 0.8, 'colsample_bytree': 0.8, 'gamma': 0, 'reg_alpha': 0, 'reg_lambda': 1}
 
@@ -101,7 +101,7 @@ def daymodel_train(date, working_dir=working_dir):
     save_report(stock_model, 'stock_mars_day', working_dir)
 
     stock_model = set_target(stock_model, start_date, QA_util_get_last_day(QA_util_get_real_date(date), 6), mark = 5, col = 'TARGET5', type='value')
-    stock_model = prepare_data(stock_model, data_set[0:50], None, 0.01, [1,2,3,5,10,15,20])
+    stock_model = prepare_data(stock_model, data_set[0:50], None, 0.95, [1,2,3,5,10,15,20], train_type=True)
 
     other_params = {'learning_rate': 0.1, 'n_estimators': 200, 'max_depth': 5, 'min_child_weight': 1, 'seed': 1,
                     'subsample': 0.8, 'colsample_bytree': 0.8, 'gamma': 0, 'reg_alpha': 0, 'reg_lambda': 1}
@@ -114,7 +114,7 @@ def daymodel_train(date, working_dir=working_dir):
     stock_model.data = stock_model.data.reindex(res_b.index)
     stock_model = set_target(stock_model, start_date, QA_util_get_last_day(QA_util_get_real_date(date), 6), mark = 5, col = 'TARGET', type='value')
 
-    stock_model = prepare_data(stock_model, None, 0, 0.95)
+    stock_model = prepare_data(stock_model, None, 0, 0.95, train_type=True)
     other_params = {'learning_rate': 0.1, 'n_estimators': 200, 'max_depth': 5, 'min_child_weight': 1, 'seed': 1,
                     'subsample': 0.8, 'colsample_bytree': 0.8, 'gamma': 0, 'reg_alpha': 0, 'reg_lambda': 1}
 
@@ -172,36 +172,45 @@ def train_index(date, working_dir=working_dir):
 def train_min_model(date, working_dir=working_dir):
     ui_log = None
     strategy_id=''
-    trading_date=''
+    trading_date=date
     account= 'name:client-1'
     working_dir = working_dir
 
     client = get_Client(type='yun_ease',trader_path=None,host=trading_setting['host'],port=trading_setting['port'],key=trading_setting['key'])
     sub_accounts, frozen, positions, frozen_positions = check_Client(client, account, strategy_id, trading_date, exceptions=exceptions)
 
-    r_tar, xg_sh, prediction = DataTools.load_data(concat_predict, QA_util_get_pre_trade_date(date,1), working_dir, 'stock_sh', 'prediction_sh')
-    code_list = list(set(xg_sh[(xg_sh.RANK <= 20)&(xg_sh.TARGET5.isnull())].reset_index().code.tolist()))
+    r_tar, xg_sh, prediction = DataTools.load_data(concat_predict, trading_date, working_dir, 'stock_sh', 'prediction_sh')
+    xg_sh=xg_sh[xg_sh.RANK<=20]
 
-    code_list = code_list + positions.code.tolist()
+    r_tar, xg, prediction = DataTools.load_data(concat_predict, trading_date, working_dir, 'stock_xg', 'prediction')
+    r_tar, xg_nn, prediction = DataTools.load_data(concat_predict_neut, trading_date, working_dir, 'stock_xg_nn', 'prediction_stock_xg_nn')
+    r_tar, mars_nn, prediction = DataTools.load_data(concat_predict_neut, trading_date, working_dir, 'stock_mars_nn', 'prediction_stock_mars_nn')
+    r_tar, mars_day, prediction = DataTools.load_data(concat_predict, trading_date, working_dir, 'stock_mars_day', 'prediction_stock_mars_day')
+    code_list = list(set(xg_sh[(xg_sh.RANK <= 20)&(xg_sh.TARGET5.isnull())].reset_index().code.tolist()
+                         + xg[(xg.RANK <= 20)&(xg.y_pred==1)&(xg.TARGET5.isnull())].reset_index().code.tolist()
+                         + xg_nn[(xg_nn.RANK <= 20)&(xg_nn.y_pred==1)&(xg_nn.TARGET5.isnull())].reset_index().code.tolist()
+                         + mars_nn[(mars_nn.RANK <= 20)&(mars_nn.y_pred==1)&(mars_nn.TARGET5.isnull())].reset_index().code.tolist()
+                         + mars_day[(mars_day.RANK <= 20)&(mars_day.y_pred==1)&(mars_day.TARGET5.isnull())].reset_index().code.tolist()
+                         + positions.code.tolist()))
 
     start_date = QA_util_get_last_day(QA_util_get_real_date(date), 30)
     end_date = date
 
     stock_model = QAStockXGBoostMin()
 
-    stock_model = load_data(stock_model, start_date, end_date, type ='crawl', sub_block=True, norm_type=None, ST=True,code=code_list)
+    stock_model = load_data(stock_model, QA_util_get_last_day(start_date, 15), end_date, type ='crawl', sub_block=True, norm_type=None, ST=True,code=code_list)
 
     stock_model = set_target(stock_model, start_date, QA_util_get_last_day(QA_util_get_real_date(date), 3), mark = 0.02, col = 'TARGET', type='value')
-    stock_model = prepare_data(stock_model, None, None, 0.01)
+    stock_model = prepare_data(stock_model, in_set, None, 0.95, train_type=True)
     other_params = {'learning_rate': 0.1, 'n_estimators': 200, 'max_depth': 5, 'min_child_weight': 1, 'seed': 1,
                     'subsample': 0.8, 'colsample_bytree': 0.8, 'gamma': 0, 'reg_alpha': 0, 'reg_lambda': 1}
 
     stock_model = start_train(stock_model, other_params)
     save_report(stock_model, 'stock_in', working_dir)
 
-    stock_model = set_target(stock_model, start_date, QA_util_get_last_day(QA_util_get_real_date(date), 3), mark = -0.02, col = 'TARGET', type='value')
-    stock_model.data = stock_model.data.assign(TARGET=stock_model.data.TARGET.apply(lambda x: 1 if x==0 else 0))
-    stock_model = prepare_data(stock_model, None, None, 0.01)
+    #stock_model = set_target(stock_model, start_date, QA_util_get_last_day(QA_util_get_real_date(date), 3), mark = -0.02, col = 'TARGET', type='value')
+    stock_model.data = stock_model.data.assign(star=stock_model.data.TARGET.apply(lambda x: 1 if x <= -0.02 else 0))
+    stock_model = prepare_data(stock_model, in_set, None, 0.95, train_type=True)
     other_params = {'learning_rate': 0.1, 'n_estimators': 200, 'max_depth': 5, 'min_child_weight': 1, 'seed': 1,
                     'subsample': 0.8, 'colsample_bytree': 0.8, 'gamma': 0, 'reg_alpha': 0, 'reg_lambda': 1}
 

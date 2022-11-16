@@ -1,5 +1,7 @@
 from QUANTAXIS.QAUtil import QA_util_log_info
 from QUANTTOOLS.Market.MarketTools.TimeTools.time_control import open_check, close_check, suspend_check, get_on_time,time_check_before, check_market_time,time_check_after
+from QUANTTOOLS.QAStockETL.Crawly.IP_Proxy import get_ip_poll,check_ip_poll
+from QUANTTOOLS.QAStockETL.QAFetch.QATdx import QA_fetch_get_stock_tfp
 import time
 import datetime
 
@@ -15,7 +17,31 @@ class StrategyBase:
         self.balance_func = None
         self.percent_func = None
         self.buy_list = None
-        self.tmp_data = None
+        self.sec_temp_data = []
+        self.day_temp_data = []
+        self.source_data = None
+        self.proxies = []
+
+    def set_proxy_pool(self, url=None, ckeck_url=None):
+        if url is not None:
+            proxies = get_ip_poll(url)
+        else:
+            proxies = get_ip_poll()
+        if ckeck_url is not None:
+            self.proxies = [check_ip_poll(i, ckeck_url) for i in proxies]
+        else:
+            self.proxies = [check_ip_poll(i) for i in proxies]
+
+    def set_code_check(self):
+        QA_util_log_info('##JOB Check TFP stock  ==== {}'.format(self.trading_date), ui_log= None)
+        tfp = QA_fetch_get_stock_tfp(self.trading_date)
+        QA_util_log_info('##JOB Stock on TFP  ==== {}'.format(self.trading_date), ui_log= None)
+        QA_util_log_info([i for i in self.target_list if i in tfp], ui_log= None)
+        self.target_list = [i for i in self.target_list if i not in tfp]
+
+    def set_init_func(self, func):
+        self.init_func = func
+        self.day_temp_data = []
 
     def set_signal_func(self, func, signaltime_list=None):
         self.signal_func = func
@@ -32,24 +58,42 @@ class StrategyBase:
         self.percent_func = func
 
     def code_select(self, mark_tm):
+        QA_util_log_info('##JOB Refresh Proxy Pool  ==== {}'.format(mark_tm), ui_log= None)
+        self.set_proxy_pool()
         QA_util_log_info('##JOB Refresh Tmp Code List  ==== {}'.format(mark_tm), ui_log= None)
         QA_util_log_info('##JOB Init Code List  ==== {}'.format(self.target_list), ui_log= None)
         if self.codsel_func is not None:
-            self.buy_list, self.tmp_data = self.codsel_func(target_list = self.target_list,
-                                                            position =self.position,
-                                                            trading_date = self.trading_date,
-                                                            mark_tm=mark_tm)
+            self.buy_list, self.sec_temp_data, self.source_data = self.codsel_func(target_list=self.target_list,
+                                                                                   position=self.position,
+                                                                                   day_temp_data=self.day_temp_data,
+                                                                                   sec_temp_data=self.sec_temp_data,
+                                                                                   trading_date=self.trading_date,
+                                                                                   mark_tm=mark_tm,
+                                                                                   proxies=self.proxies)
         else:
             self.buy_list = None
-            self.tmp_data = None
+            self.sec_temp_data = []
+            self.source_data = None
+
+
+    def init_run(self):
+        if self.init_func is not None:
+            self.day_temp_data = self.init_func(list(set(self.target_list + self.position.code.tolist())),
+                                             self.trading_date)
+        else:
+            self.day_temp_data = []
 
     def signal_run(self, mark_tm):
-        return self.signal_func(target_list = self.target_list,
-                                buy_list = self.buy_list,
-                                position = self.position,
-                                tmp_data = self.tmp_data,
-                                trading_date = self.trading_date,
-                                mark_tm = mark_tm)
+        data = self.signal_func(target_list=self.target_list,
+                                buy_list=self.buy_list,
+                                position=self.position,
+                                sec_temp_data=self.sec_temp_data,
+                                day_temp_data=self.day_temp_data,
+                                source_data=self.source_data,
+                                trading_date=self.trading_date,
+                                mark_tm=mark_tm,
+                                proxies=self.proxies)
+        return(data)
 
     def percent_run(self, mark_tm):
         if self.percent_func is not None:
@@ -68,10 +112,10 @@ class StrategyBase:
 
         QA_util_log_info('##JOB Now Start Trading ==== {}'.format(mark_tm), ui_log= None)
 
-        if mark_tm in self.codseltime_list or self.tmp_data is None:
+        if mark_tm in self.codseltime_list or len(self.sec_temp_data) == 0:
 
             # init codseltime
-            self.start_status = True
+            #self.start_status = True
             tm = datetime.datetime.now().strftime("%H:%M:%S")
             codsel_tmmark = get_on_time(tm, self.codseltime_list)
             QA_util_log_info('##JOB Now Init Codselt Mark Time ==== {}'.format(str(codsel_tmmark)), ui_log=None)
@@ -80,12 +124,18 @@ class StrategyBase:
             k = 0
             while k <= 2:
                 QA_util_log_info('JOB Selct Code List {x} times ==================== '.format(x=k+1), ui_log=None)
-                try:
-                    self.code_select(codsel_tmmark)
-                    QA_util_log_info('JOB Selct Code List Done ==================== ', ui_log=None)
-                    break
-                except:
-                    k += 1
+                #try:
+                self.code_select(codsel_tmmark)
+                QA_util_log_info('JOB Selct Code List Done ==================== ', ui_log=None)
+                break
+                #except:
+                #    k += 1
+
+            if k > 2:
+                QA_util_log_info('JOB Selct Code List Failed ==================== ', ui_log=None)
+        else:
+            QA_util_log_info('JOB Init Source Data ==================== ', ui_log=None)
+            self.source_data = None
 
         if mark_tm in self.signaltime_list:
             QA_util_log_info('JOB Init Trading Signal ==================== {}'.format(

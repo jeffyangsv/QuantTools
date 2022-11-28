@@ -178,7 +178,10 @@ def train_min_model(date, working_dir=working_dir):
 
     client = get_Client(type='yun_ease',trader_path=None,host=trading_setting['host'],port=trading_setting['port'],key=trading_setting['key'])
     sub_accounts, frozen, positions, frozen_positions = check_Client(client, account, strategy_id, trading_date, exceptions=exceptions)
-
+    try:
+        positions = positions.code.tolist()
+    except:
+        positions = []
     r_tar, xg_sh, prediction = DataTools.load_data(concat_predict, trading_date, working_dir, 'stock_sh', 'prediction_sh')
     xg_sh=xg_sh[xg_sh.RANK<=20]
 
@@ -191,16 +194,19 @@ def train_min_model(date, working_dir=working_dir):
                          + xg_nn[(xg_nn.RANK <= 20)&(xg_nn.y_pred==1)&(xg_nn.TARGET5.isnull())].reset_index().code.tolist()
                          + mars_nn[(mars_nn.RANK <= 20)&(mars_nn.y_pred==1)&(mars_nn.TARGET5.isnull())].reset_index().code.tolist()
                          + mars_day[(mars_day.RANK <= 20)&(mars_day.y_pred==1)&(mars_day.TARGET5.isnull())].reset_index().code.tolist()
-                         + positions.code.tolist()))
+                         + positions))
 
     start_date = QA_util_get_last_day(QA_util_get_real_date(date), 30)
     end_date = date
 
     stock_model = QAStockXGBoostMin()
 
-    stock_model = load_data(stock_model, QA_util_get_last_day(start_date, 15), end_date, type ='crawl', sub_block=True, norm_type=None, ST=True,code=code_list)
+    stock_model = load_data(stock_model, QA_util_get_last_day(start_date, 15), end_date, type ='crawl', sub_block=True,
+                            norm_type=None, ST=True,code=code_list)
 
-    stock_model = set_target(stock_model, start_date, QA_util_get_last_day(QA_util_get_real_date(date), 3), mark = 0.02, col = 'TARGET', type='value')
+    stock_model = set_target(stock_model, start_date, QA_util_get_last_day(QA_util_get_real_date(date), 3), mark = 0.03,
+                             col = 'TARGET', type='value')
+
     stock_model = prepare_data(stock_model, in_set, None, 0.95, train_type=True)
     other_params = {'learning_rate': 0.1, 'n_estimators': 200, 'max_depth': 5, 'min_child_weight': 1, 'seed': 1,
                     'subsample': 0.8, 'colsample_bytree': 0.8, 'gamma': 0, 'reg_alpha': 0, 'reg_lambda': 1}
@@ -208,7 +214,14 @@ def train_min_model(date, working_dir=working_dir):
     stock_model = start_train(stock_model, other_params)
     save_report(stock_model, 'stock_in', working_dir)
 
-    #stock_model = set_target(stock_model, start_date, QA_util_get_last_day(QA_util_get_real_date(date), 3), mark = -0.02, col = 'TARGET', type='value')
+    stock_model.data = stock_model.data.assign(star=stock_model.data.TARGET3.apply(lambda x: 1 if x >= 0.03 else 0))
+    stock_model = prepare_data(stock_model, in_set, None, 0.95, train_type=True)
+    other_params = {'learning_rate': 0.1, 'n_estimators': 200, 'max_depth': 5, 'min_child_weight': 1, 'seed': 1,
+                    'subsample': 0.8, 'colsample_bytree': 0.8, 'gamma': 0, 'reg_alpha': 0, 'reg_lambda': 1}
+
+    stock_model = start_train(stock_model, other_params)
+    save_report(stock_model, 'stock_in_1', working_dir)
+
     stock_model.data = stock_model.data.assign(star=stock_model.data.TARGET.apply(lambda x: 1 if x <= -0.02 else 0))
     stock_model = prepare_data(stock_model, in_set, None, 0.95, train_type=True)
     other_params = {'learning_rate': 0.1, 'n_estimators': 200, 'max_depth': 5, 'min_child_weight': 1, 'seed': 1,
@@ -216,3 +229,11 @@ def train_min_model(date, working_dir=working_dir):
 
     stock_model = start_train(stock_model, other_params)
     save_report(stock_model, 'stock_out', working_dir)
+
+    stock_model.data = stock_model.data.assign(star=stock_model.data.TARGET3.apply(lambda x: 1 if x <= -0.03 else 0))
+    stock_model = prepare_data(stock_model, in_set, None, 0.95, train_type=True)
+    other_params = {'learning_rate': 0.1, 'n_estimators': 200, 'max_depth': 5, 'min_child_weight': 1, 'seed': 1,
+                    'subsample': 0.8, 'colsample_bytree': 0.8, 'gamma': 0, 'reg_alpha': 0, 'reg_lambda': 1}
+
+    stock_model = start_train(stock_model, other_params)
+    save_report(stock_model, 'stock_out_1', working_dir)

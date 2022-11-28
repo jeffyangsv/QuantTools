@@ -33,8 +33,8 @@ from QUANTTOOLS.QAStockETL.Check import (check_stock_code, check_stock_neut, che
                                          check_index_techindex, check_index_techhour)
 from QUANTAXIS.QAUtil import QA_util_today_str,QA_util_if_trade,QA_util_get_pre_trade_date,QA_util_get_real_date
 from QUANTTOOLS.Market.StockMarket.DailyJob.daily_job import daily_run, index_run, neut_run
-from QUANTAXIS.QASU.main import (QA_SU_save_stock_list)
-from QUANTTOOLS.QAStockETL import QA_SU_save_stock_aklist,QA_SU_save_stock_info_tushare
+from QUANTAXIS.QASU.main import (QA_SU_save_stock_list,QA_SU_save_stock_info_tushare)
+from QUANTTOOLS.QAStockETL import QA_SU_save_stock_aklist
 import time
 
 if __name__ == '__main__':
@@ -45,34 +45,31 @@ if __name__ == '__main__':
     else:
         check_day = QA_util_get_real_date(mark_day)
 
-    QA_SU_save_stock_aklist()
-    QA_SU_save_stock_list('tdx')
     res = check_stock_code()
-    if len(res) > 0:
-        QA_SU_save_stock_list('tdx')
-        #QA_SU_save_stock_info_tushare()
-        #QA_SU_save_stock_industryinfo()
-        res = check_stock_code()
 
     res = check_stock_alpha191(mark_day)
     while res is None or len(res[1]) > 20:
         time.sleep(180)
         res = check_stock_alpha191(mark_day)
 
+    res = check_stock_techindex(mark_day)
+    while res is None or len(res[1]) > 50:
+        time.sleep(180)
+        res = check_stock_techindex(mark_day)
+
     res = check_stock_finper(mark_day)
     while res is None or len(res[1]) > 100:
         time.sleep(180)
         res = check_stock_finper(mark_day)
 
-    res = check_stock_vwap(mark_day)
-    while res is None or len(res[1]) > 50:
-        time.sleep(180)
-        res = check_stock_vwap(mark_day)
-
-    res = check_stock_neut(mark_day)
+    res = check_stock_techhour(mark_day)
     while res is None or len(res[1]) > 100:
         time.sleep(180)
-        res = check_stock_neut(mark_day)
+        res = check_stock_techhour(mark_day)
+    #res = check_stock_vwap(mark_day)
+    #while res is None or len(res[1]) > 50:
+    #    time.sleep(180)
+    #    res = check_stock_vwap(mark_day)
 
     daily_run(mark_day)
 

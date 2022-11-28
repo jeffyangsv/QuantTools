@@ -78,7 +78,11 @@ class StrategyBase:
 
     def init_run(self):
         if self.init_func is not None:
-            self.day_temp_data = self.init_func(list(set(self.target_list + self.position.code.tolist())),
+            if self.position is not None and self.position.shape[0] > 0:
+                code_list = list(set(self.target_list + self.position.code.tolist()))
+            else:
+                code_list = self.target_list
+            self.day_temp_data = self.init_func(code_list,
                                              self.trading_date)
         else:
             self.day_temp_data = []
@@ -199,9 +203,10 @@ def build_info(data):
         buy_dict = data[data.code.isin(buy_list)][need_columns].to_dict(orient='records')
 
         signal_data = {'sell': sell_dict, 'buy': buy_dict}
+        QA_util_log_info(signal_data, ui_log = None)
         return(signal_data)
-
-    return({'sell': None, 'buy': None})
+    else:
+        return({'sell': None, 'buy': None})
 
 
 if __name__ == '__main__':

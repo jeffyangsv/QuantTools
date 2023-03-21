@@ -55,7 +55,6 @@ class QAModel():
 
         self.thresh = thresh
         self.drop = drop
-        self.cols = cols
         self.n_in = n_in
 
         if cols is None:
@@ -74,7 +73,9 @@ class QAModel():
         self.shuffle()
         non_cols, std_cols = self.desribute_check()
         QA_util_log_info('##JOB Drop Columns with low {} fill rate {} ===== {}'.format(drop, non_cols, self.info['date']), ui_log = None)
-        self.cols = [i for i in self.cols if i not in std_cols + non_cols]
+        if self.drop > 0:
+            self.cols = [i for i in self.cols if i not in std_cols + non_cols]
+
 
         loss_rate = self.thresh_check(train_type=train_type)
         QA_util_log_info('##JOB Split Train Data ===== {}'.format(self.info['date']), ui_log = None)

@@ -18,10 +18,10 @@ import pandas as pd
 
 def predict(trading_date, top_num=top, working_dir=working_dir, exceptions=exceptions):
     predict_base(trading_date, concat_predict, model_name = 'stock_xg', file_name = 'prediction', top_num=top_num, percent=percent, working_dir=working_dir,client_setting=trading_setting, exceptions=exceptions,
-                 name_list = ['NAME','INDUSTRY','TOTAL_MARKET','PB','SKDJ_K','SKDJ_K_WK'],
+                 name_list = ['NAME','INDUSTRY','TOTAL_MARKET','PB','SKDJ_K','SKDJ_K_WK','AVG5_TOR','AVG60_TOR'],
                  value_ist = ['Z_PROB','O_PROB','RANK','TARGET','TARGET3','TARGET4','TARGET5','PASS_MARK'],
                  sort_mark ='RANK',
-                 selec_list=['NAME','INDUSTRY','Z_PROB','O_PROB','RANK','TOTAL_MARKET','PB','SKDJ_K','SKDJ_K_WK'])
+                 selec_list=['NAME','INDUSTRY','Z_PROB','O_PROB','RANK','TOTAL_MARKET','PB','SKDJ_K','SKDJ_K_WK','AVG5_TOR','AVG60_TOR'])
 
 def predict_real(trading_date, top_num=top, working_dir=working_dir, exceptions=exceptions):
     predict_base(trading_date, concat_predict_real, model_name = 'stock_xg_real', file_name = 'prediction_real', top_num=top_num, percent=percent, working_dir=working_dir,client_setting=trading_setting, exceptions=exceptions)
@@ -109,10 +109,10 @@ def index_predict_watch(trading_date, working_dir=working_dir):
 
 def predict_3(trading_date, top_num=top, working_dir=working_dir, exceptions=exceptions):
     predict_base(trading_date, concat_predict, model_name = 'stock_mars_day', file_name = 'prediction_stock_mars_day', top_num=top_num,client_setting=trading_setting, percent=percent, working_dir=working_dir, exceptions=exceptions,
-                 name_list = ['NAME','INDUSTRY','TOTAL_MARKET','PB','SKDJ_K','SKDJ_K_WK'],
+                 name_list = ['NAME','INDUSTRY','TOTAL_MARKET','PB','SKDJ_K','SKDJ_K_WK','AVG5_TOR','AVG60_TOR'],
                  value_ist = ['Z_PROB','O_PROB','RANK','TARGET','TARGET3','TARGET4','TARGET5','PASS_MARK'],
                  sort_mark ='RANK',
-                 selec_list=['NAME','INDUSTRY','Z_PROB','O_PROB','RANK','TOTAL_MARKET','PB','SKDJ_K','SKDJ_K_WK'])
+                 selec_list=['NAME','INDUSTRY','Z_PROB','O_PROB','RANK','TOTAL_MARKET','PB','SKDJ_K','SKDJ_K_WK','AVG5_TOR','AVG60_TOR'])
 
 def predict_3_1(trading_date, top_num=top, working_dir=working_dir, exceptions=exceptions):
     predict_base(trading_date, concat_predict, model_name = 'stock_mars_day_1', file_name = 'prediction_stock_mars_day_1', top_num=top_num,client_setting=trading_setting, percent=percent, working_dir=working_dir, exceptions=exceptions)
@@ -290,8 +290,14 @@ def block_watch(trading_date):
     start_date = QA_util_get_pre_trade_date(trading_date,5)
     end_date = trading_date
     res_a, res_b, res_c, res_d = watch_func(start_date, end_date)
+    cols_name = ['NAME','INDUSTRY','index','BLN',
+                 'TOTAL_MARKET','OPERATINGRINRATE','ROE_TTM',
+                 'PB','PE_TTM',
+                 'GM_RATE','TURN_RATE','TM_RATE','PB_RATE',
+                 'SKDJ_K','SKDJ_K_WK','AVG5_TOR','AVG60_TOR',
+                 'PASS_MARK', 'TARGET', 'TARGET3', 'TARGET4', 'TARGET5','TARGET10', 'RANK']
 
-    stock_target = get_quant_data(start_date, end_date,list(set(res_b.reset_index().code.tolist() + res_d.reset_index().code.tolist())), type='crawl', block=False, sub_block=False,norm_type=None)[['SKDJ_K','SKDJ_K_WK','RRNG','RRNG_HR','MA60','MA60_C','MA60_D','RRNG_WK','MA60_C_WK','SHORT10','SHORT20','LONG60','AVG5','MA60_C','SHORT10_WK','SHORT20_WK','LONG60_WK','MA60_C_WK','PASS_MARK','TARGET','TARGET3','TARGET4','TARGET5','TARGET10']]
+    stock_target = get_quant_data(start_date, end_date,list(set(res_b.reset_index().code.tolist() + res_d.reset_index().code.tolist())), type='crawl', block=False, sub_block=False,norm_type=None)[['SKDJ_K','SKDJ_K_WK','RRNG','RRNG_HR','MA60','MA60_C','MA60_D','RRNG_WK','MA60_C_WK','SHORT10','SHORT20','LONG60','AVG5','MA60_C','SHORT10_WK','SHORT20_WK','LONG60_WK','MA60_C_WK','AVG5_TOR','AVG60_TOR','PASS_MARK','TARGET','TARGET3','TARGET4','TARGET5','TARGET10']]
     index_target = get_index_quant_data(start_date, end_date, list(set(res_a.reset_index().code.tolist() + res_c.reset_index().code.tolist())), type='crawl', norm_type=None)[['SKDJ_K','SKDJ_K_WK','RRNG','MA60_C','MA60_D','SKDJ_K','SKDJ_TR','SKDJ_K_HR','SKDJ_TR_HR','SKDJ_K_WK','SKDJ_TR_WK','PASS_MARK','INDEX_TARGET','INDEX_TARGET3','INDEX_TARGET4','INDEX_TARGET5','INDEX_TARGET10']]
 
     res_a = res_a.join(index_target)
@@ -324,8 +330,8 @@ def block_watch(trading_date):
                                              '轮动清单':res_d[res_d.block_RANK <= 5],
                                              '股池清单':res_d
                                              })
-    base_report(trading_date, '综合选股报告 一', **{'潜力板块':res_d[(((res_d.TOTAL_MARKET <= 100)&(res_d.PB <= 5))|((res_d.TOTAL_MARKET <= 50)))&((res_d.SKDJ_K < 40)|(res_d.SKDJ_K_WK < 40))],
-                                             '优质板块':res_b[(((res_b.TOTAL_MARKET <= 100)&(res_b.PB <= 5))|((res_b.TOTAL_MARKET <= 50)&(res_b.PB <= 10)))&((res_b.SKDJ_K < 40)|(res_b.SKDJ_K_WK < 40))]
+    base_report(trading_date, '综合选股报告 一', **{'潜力板块':res_d[(((res_d.TOTAL_MARKET <= 100)&(res_d.PB <= 5))|((res_d.TOTAL_MARKET <= 50)))&((res_d.SKDJ_K < 40)|(res_d.SKDJ_K_WK < 40))][cols_name],
+                                             '优质板块':res_b[(((res_b.TOTAL_MARKET <= 100)&(res_b.PB <= 5))|((res_b.TOTAL_MARKET <= 50)&(res_b.PB <= 10)))&((res_b.SKDJ_K < 40)|(res_b.SKDJ_K_WK < 40))][cols_name]
                                              })
 
 
@@ -341,9 +347,9 @@ def summary_func(trading_date):
     stock_target = get_quant_data(start_date, end_date, type='crawl', block=False, sub_block=False,norm_type=None)[['TOTAL_MARKET','PB','RRNG','RRNG_HR','MA60','MA60_C','MA60_D','RRNG_WK','TAR','MA60_C_WK','SHORT10','SHORT20','LONG60','AVG5','MA60_C','SHORT10_WK','SHORT20_WK','LONG60_WK','MA60_C_WK','PASS_MARK','TARGET','TARGET3','TARGET4','TARGET5','TARGET10','SKDJ_K','SKDJ_K_WK']]
     stock_res = stock_target[['TOTAL_MARKET','PB','RRNG','RRNG_HR','MA60','MA60_C','MA60_D','TAR','RRNG_WK','MA60_C_WK','SHORT10','SHORT20','LONG60','AVG5','MA60_C','SHORT10_WK','SHORT20_WK','LONG60_WK','MA60_C_WK','SKDJ_K','SKDJ_K_WK']]
     cols_name = ['NAME','INDUSTRY','TOTAL_MARKET','PB','RRNG','RRNG_WK','SKDJ_K','SKDJ_K_WK','PASS_MARK', 'TARGET', 'TARGET3', 'TARGET4', 'TARGET5','TARGET10', 'y_pred', 'model', 'RANK']
-    #xg = xg.join(stock_res[['RRNG','RRNG_WK']]).assign(model='xg')
-    xg_nn = xg_nn.join(stock_res[['RRNG','RRNG_WK','SKDJ_K_WK','SKDJ_K','TOTAL_MARKET','PB']]).assign(model='xg_nn')
-    mars_nn = mars_nn.join(stock_res[['RRNG','RRNG_WK','SKDJ_K_WK', 'SKDJ_K','TOTAL_MARKET','PB']]).assign(model='mars_nn')
+    xg = xg.join(stock_res[['RRNG','RRNG_WK']]).assign(model='xg')
+    xg_nn = xg_nn.join(stock_res[['TOTAL_MARKET', 'PB', 'SKDJ_K', 'RRNG', 'SKDJ_K_WK', 'RRNG_WK']]).assign(model='xg_nn')
+    mars_nn = mars_nn.join(stock_res[['TOTAL_MARKET', 'PB', 'SKDJ_K', 'RRNG', 'SKDJ_K_WK', 'RRNG_WK']]).assign(model='mars_nn')
     mars_day = mars_day.join(stock_res[['RRNG','RRNG_WK']]).assign(model='mars_day')
     xg_sh = xg_sh.join(stock_res[['RRNG','RRNG_WK']]).assign(model='xg_sh')
 
